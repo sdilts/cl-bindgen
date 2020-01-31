@@ -39,8 +39,15 @@ class TypeTransformer:
         "int8_t"  : ":int8",
     }
 
-    def __init__(self):
-        pass
+    def __init__(self, type_manglers):
+        self.manglers = type_manglers
+
+    def mangle_type(self, type_name):
+        name = type_name
+        for mangler in self.manglers:
+            if mangler.can_mangle(name):
+                name = mangler.mangle(name)
+        return name
 
     def cursor_lisp_type_str(self, type_obj):
         assert(type(type_obj) == clang.Type)
@@ -71,10 +78,11 @@ class TypeTransformer:
             named_type_kind = named_type.kind
             if named_type_kind == TypeKind.RECORD:
                 type_decl = type_obj.get_declaration()
+                mangled_name = self.mangle_type(type_decl.spelling)
                 if type_decl.kind == CursorKind.UNION_DECL:
-                    return "(:union " + type_decl.spelling + ")"
+                    return "(:union " + mangled_name + ")"
                 elif type_decl.kind == CursorKind.STRUCT_DECL:
-                    return "(:struct " + type_decl.spelling + ")"
+                    return "(:struct " + mangled_name + ")"
                 else:
                     raise Exception("Unknown cursorkind")
             elif named_type_kind == TypeKind.ENUM:
