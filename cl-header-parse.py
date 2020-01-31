@@ -36,7 +36,7 @@ def process_func_decl(cursor, transformers, output):
     mangled_name = name
     for mangler in transformers.manglers:
         if mangler.can_mangle(name):
-            name = mangler.mangle(name)
+            mangled_name = mangler.mangle(name)
 
     ret_type = cursor.result_type
     lisp_ret_type = transformers.type_processor.cursor_lisp_type_str(ret_type)
