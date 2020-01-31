@@ -17,7 +17,13 @@ class Transformers(NamedTuple):
 
 
 def process_macro_def(cursor, transformers, output):
-    print("Processing macro definition\n", file=sys.stderr)
+    location = cursor.location
+    spelling = cursor.spelling
+    print(f"Found macro {spelling} definition in: {location.file}:{location.line}:{location.column}\n",
+          file=sys.stderr)
+    output.write("#| MACRO_DEFINITION\n")
+    output.write(f"(defconstant +{spelling}+ ACTUAL_VALUE_HERE)\n")
+    output.write("#|\n\n")
 
 def process_struct_decl(cursor, transformers, output):
     print("Processing struct decl\n", file=sys.stderr)
@@ -26,7 +32,6 @@ def process_enum_decl(cursor, transformers, output):
     print("Processing enum decl\n", file=sys.stderr)
 
 def process_func_decl(cursor, transformers, output):
-    print("Processing function decl\n", file=sys.stderr)
     name = cursor.spelling
     mangled_name = name
     for mangler in transformers.manglers:
