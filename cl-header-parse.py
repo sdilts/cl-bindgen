@@ -4,7 +4,7 @@ from typing import NamedTuple
 
 import clang.cindex as clang
 
-import mangler
+from mangler import UnderscoreMangler
 import typetransformer
 
 # name managler interface:
@@ -99,11 +99,14 @@ process_file.visit_table = {
 }
 
 
+def process_options(manglers=[]):
+    return Transformers(manglers=manglers,
+                        type_processor=typetransformer.TypeTransformer(manglers))
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(f"Not enough arguments: {len(sys.argv)} given", file=sys.stderr)
         exit(1)
 
-    processors = Transformers(manglers=[], type_processor=typetransformer.TypeTransformer())
+    processors = process_options([UnderscoreMangler()])
 
     process_file(sys.argv[1], processors, args=sys.argv[2:1])
