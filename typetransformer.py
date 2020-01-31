@@ -86,7 +86,7 @@ class TypeTransformer:
                 else:
                     raise Exception("Unknown cursorkind")
             elif named_type_kind == TypeKind.ENUM:
-                return ":int ; " + named_type.spelling + "\n"
+                return ":int ; " + self.mangle_type(named_type.spelling) + "\n"
 
         elif kind == TypeKind.INCOMPLETEARRAY:
             elem_type = type_obj.element_type
