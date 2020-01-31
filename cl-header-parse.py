@@ -28,8 +28,26 @@ def process_macro_def(cursor, transformers, output):
 def process_struct_decl(cursor, transformers, output):
     print("Processing struct decl\n", file=sys.stderr)
 
+def process_enum(name, cursor, output):
+    output.write(f"(defcenum {name}")
+    for field in cursor.get_children():
+        name = field.spelling
+        mangler = UnderscoreMangler()
+        if mangler.can_mangle(name):
+            name = mangler.mangle(name)
+
+        output.write(f"\n  (:{name} {field.enum_value})")
+    output.write(")\n\n")
+
 def process_enum_decl(cursor, transformers, output):
-    print("Processing enum decl\n", file=sys.stderr)
+    print("Enum is anonymous:", cursor.is_anonymous())
+    name = cursor.spelling
+    if name:
+        name = transformers.type_processor.mangle_type(name)
+    else:
+        location = cursor.location
+        raise Exception(f"Name not given for enum at {location.file}:{location.line}:{location.column}")
+    process_enum(name, cursor, output)
 
 def process_func_decl(cursor, transformers, output):
     name = cursor.spelling
