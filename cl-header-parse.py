@@ -60,7 +60,10 @@ def process_typedef_decl(cursor, transformers, output):
     print("Processing typedef decl\n", file=sys.stderr)
 
 def unrecognized_cursorkind(cursor, transformers, output):
-    print(f"Don't recognize cursor kind: {cursor.kind}\n", file=sys.stderr)
+    print(f"Don't recognize cursor:", file=sys.stderr)
+    print("Source location", cursor.location.file, file=sys.stderr)
+    print("Kind:", cursor.kind, file=sys.stderr)
+    print("Spelling:", cursor.spelling, file=sys.stderr)
 
 def process_file(filepath, transformers, args=[], output=sys.stdout):
     print(f"Processing file: {filepath}", file=sys.stderr)
@@ -79,9 +82,6 @@ def process_file(filepath, transformers, args=[], output=sys.stdout):
     for child in root_cursor.get_children():
         location = child.location
         if location.file and location.file.name == filepath:
-            print("Source location", location.file, file=sys.stderr)
-            print("Kind:", child.kind, file=sys.stderr)
-            print("Spelling:", child.spelling, file=sys.stderr)
             handler_func = process_file.visit_table.get(child.kind, unrecognized_cursorkind)
             handler_func(child, transformers, output)
 
