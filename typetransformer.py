@@ -89,5 +89,8 @@ class TypeTransformer:
             type_str = self.cursor_lisp_type_str(elem_type)
             return f"(:pointer {type_str}) ; array (size {num_elems})\n"
 
-        raise Exception(f"Don't know how to handle type: {type_obj.spelling}")
+        elif kind == TypeKind.FUNCTIONPROTO:
+            return f":pointer ; function ptr {type_obj.spelling}\n"
+
+        raise Exception(f"Don't know how to handle type: {type_obj.spelling} {kind}")
         return type_obj.spelling
