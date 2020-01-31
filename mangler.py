@@ -19,7 +19,7 @@ class UnderscoreMangler:
         pass
 
     def can_mangle(self, string):
-        return True
+        return '_' in string
 
     def mangle(self, string):
-        return string
+        return string.replace('_', '-')
