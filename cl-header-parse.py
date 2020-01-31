@@ -4,7 +4,7 @@ from typing import NamedTuple
 
 import clang.cindex as clang
 
-from mangler import UnderscoreMangler
+from mangler import UnderscoreMangler, KeywordMangler
 import typetransformer
 
 # name managler interface:
@@ -130,7 +130,9 @@ if __name__ == "__main__":
         exit(1)
 
     u_managler = UnderscoreMangler()
-    enum_manglers = [u_managler]
+    k_mangler = KeywordMangler()
+    # manglers are applied in the order that they are give in these lists:
+    enum_manglers = [k_mangler, u_managler]
     type_managlers = [u_managler]
     name_managlers = [u_managler]
     processor = FileProcessor(sys.stdout,
