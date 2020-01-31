@@ -80,7 +80,7 @@ def process_file(filepath, transformers, args=[], output=sys.stdout):
 
     index = clang.Index.create()
     tu = index.parse(filepath, args=args,
-                     options=clang.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD)
+                     options=clang.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD|clang.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)
 
     root_cursor = tu.cursor
 
