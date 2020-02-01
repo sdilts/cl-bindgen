@@ -1,19 +1,20 @@
-import re
 
 class PrefixMangler:
 
-    def __init__(self, prefix):
+    def __init__(self, prefix, replace):
         self.prefix = prefix
+        self.replace = replace
         pass
 
     def can_mangle(self, string):
         # does the string have a prefix?
-        return True
+        return string.startswith(self.prefix)
 
     def mangle(self, string):
-        return string
+        return string.replace(self.prefix, self.replace, 1)
 
 class KeywordMangler:
+
     def __init(self):
         pass
 
