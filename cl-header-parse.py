@@ -37,8 +37,47 @@ class FileProcessor:
         self.output.write(f"(defconstant +{spelling}+ ACTUAL_VALUE_HERE)\n")
         self.output.write("#|\n\n")
 
+    def _process_record(self, name, actual_type, cursor):
+        output = ""
+        if actual_type == typetransformer.ElaboratedType.UNION:
+            output += f"(defcunion {name}"
+        else:
+            output += f"(defcstruct {name}"
+
+        this_type = cursor.type
+
+        for field in this_type.get_fields():
+            field_name = self._mangle_thing(field.spelling, self.name_manglers)
+            if field.is_anonymous():
+                assert(field.type.kind == clang.TypeKind.ELABORATED)
+                inner_name = name + '-' + field_name
+                actual_elaborated_type = self.type_processor.determine_elaborated_type(field.type)
+                if actual_elaborated_type == typetransformer.ElaboratedType.ENUM:
+                    decl = field.type.get_declaration()
+                    self._process_enum_as_constants(decl)
+                    ret_val = ":int"
+                elif actual_elaborated_type == typetransformer.ElaboratedType.UNION:
+                    self._process_record(inner_name, actual_elaborated_type, field)
+                    field_type =  "(:union " + name + '-' + field_name + ")"
+                else:
+                    # struct type
+                    self._process_record(inner_name, actual_elaborated_type, field)
+                    field_type = "(:struct " + name + '-' + field_name + ")"
+            else:
+                field_type = self.type_processor.cursor_lisp_type_str(field.type)
+            output += f"\n  ({field_name} {field_type})"
+        output += ")\n\n"
+        sys.stdout.write(output)
+
     def _process_struct_decl(self, cursor):
-        print("Processing struct decl\n", file=sys.stderr)
+        name = cursor.spelling
+        if name:
+            mangled_name = self.type_processor.mangle_type(name)
+            self._process_record(mangled_name, typetransformer.ElaboratedType.STRUCT, cursor)
+        else:
+            location = cursor.location
+            print(f"WARNING: Skipping unamed struct decl at {location.file}:{location.line}:{location.column}\n",
+                  file=sys.stderr)
 
     def _process_realized_enum(self, name, cursor):
         self.output.write(f"(defcenum {name}")
@@ -97,10 +136,14 @@ class FileProcessor:
               file=sys.stderr)
 
     def _process_union_decl(self, cursor):
-        location = cursor.location
-        print(f"WARNING: Not processing union decl {location.file}:{location.line}:{location.column}\n",
-              file=sys.stderr)
-
+        name = cursor.spelling
+        if name:
+            mangled_name = self.type_processor.mangle_type(name)
+            self._process_record(mangled_name, typetransformer.ElaboratedType.UNION, cursor)
+        else:
+            location = cursor.location
+            print(f"WARNING: Skipping unamed union decl at {location.file}:{location.line}:{location.column}\n",
+                  file=sys.stderr)
 
     def _process_var_decl(self, cursor):
         location = cursor.location
