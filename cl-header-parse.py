@@ -4,7 +4,7 @@ from typing import NamedTuple
 
 import clang.cindex as clang
 
-from mangler import UnderscoreMangler, KeywordMangler, PrefixMangler
+from mangler import UnderscoreMangler, KeywordMangler, PrefixMangler, RegexSubMangler
 import typetransformer
 
 # name managler interface:

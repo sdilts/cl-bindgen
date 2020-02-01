@@ -1,3 +1,4 @@
+import re
 
 class PrefixMangler:
 
@@ -36,3 +37,16 @@ class UnderscoreMangler:
 
     def mangle(self, string):
         return string.replace('_', '-')
+
+class RegexSubMangler:
+
+    def __init__(self, regex, replace):
+        self.regex = regex
+        self.replace = replace
+
+    def can_mangle(self, string):
+        # does the string have a prefix?
+        return re.search(self.regex, string)
+
+    def mangle(self, string):
+        return re.sub(self.regex, self.replace, string)
