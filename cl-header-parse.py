@@ -40,7 +40,7 @@ class FileProcessor:
     def _process_struct_decl(self, cursor):
         print("Processing struct decl\n", file=sys.stderr)
 
-    def _process_enum(self, name, cursor):
+    def _process_realized_enum(self, name, cursor):
         self.output.write(f"(defcenum {name}")
         for field in cursor.get_children():
             name = self._mangle_thing(field.spelling, self.enum_manglers)
@@ -49,14 +49,14 @@ class FileProcessor:
         self.output.write(")\n\n")
 
     def _process_enum_decl(self, cursor):
-        print("Enum is anonymous:", cursor.is_anonymous())
         name = cursor.spelling
         if name:
             name = self.type_processor.mangle_type(name)
+            self._process_realized_enum(name, cursor)
         else:
             location = cursor.location
-            print(f"WARNING: Name not given for enum at {location.file}:{location.line}:{location.column}\n")
-        self._process_enum(name, cursor)
+            print(f"WARNING: Skipping unamed struct decl at {location.file}:{location.line}:{location.column}\n",
+                  file=sys.stderr)
 
     def _process_func_decl(self, cursor):
         name = cursor.spelling
