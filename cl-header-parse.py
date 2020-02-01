@@ -35,7 +35,7 @@ class FileProcessor:
               file=sys.stderr)
         self.output.write("#| MACRO_DEFINITION\n")
         self.output.write(f"(defconstant +{spelling}+ ACTUAL_VALUE_HERE)\n")
-        self.output.write("#|\n\n")
+        self.output.write("|#\n\n")
 
     def _process_record(self, name, actual_type, cursor):
         output = ""
