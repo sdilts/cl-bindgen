@@ -82,11 +82,12 @@ class FileProcessor:
         for arg in cursor.get_arguments():
             arg_name = arg.spelling
             arg_type_name = self.type_processor.cursor_lisp_type_str(arg.type)
+            arg_mangled_name = self._mangle_thing(arg_name, self.name_manglers)
 
             if arg_name == None:
                 arg_name = "unknown"
 
-            self.output.write(f"\n  ({arg_name} {arg_type_name})")
+            self.output.write(f"\n  ({arg_mangled_name} {arg_type_name})")
 
         self.output.write(")\n\n")
 
