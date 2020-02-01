@@ -204,10 +204,10 @@ class FileProcessor:
             location = child.location
             if location.file and location.file.name == filepath:
                 handler_func = self.visit_table.get(child.kind)
-                if not handler_func:
-                    self._unrecognized_cursorkind(child)
-                else:
+                if handler_func:
                     handler_func(self, child)
+                else:
+                    self._unrecognized_cursorkind(child)
 
         # Once the file has been processed, if there are unused enums, output them as constants:
         for cursor in self.skipped_enum_decls.values():
