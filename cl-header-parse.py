@@ -78,10 +78,7 @@ class FileProcessor:
             mangled_name = self.type_processor.mangle_type(name)
             self._process_record(mangled_name, typetransformer.ElaboratedType.STRUCT, cursor)
         else:
-            self.skipped_record_decls[cursor.hash] = (cursor, typetransformer.ElaboratedType.STRUCT)
-            location = cursor.location
-            print(f"WARNING: Skipping unamed struct decl at {location.file}:{location.line}:{location.column}\n",
-                  file=sys.stderr)
+            self.skipped_record_decls[cursor.hash] = (typetransformer.ElaboratedType.STRUCT, cursor)
 
     def _process_union_decl(self, cursor):
         name = cursor.spelling
@@ -89,10 +86,7 @@ class FileProcessor:
             mangled_name = self.type_processor.mangle_type(name)
             self._process_record(mangled_name, typetransformer.ElaboratedType.UNION, cursor)
         else:
-            self.skipped_record_decls[cursor.hash] = (cursor, typetransformer.ElaboratedType.UNION)
-            location = cursor.location
-            print(f"WARNING: Skipping unamed union decl at {location.file}:{location.line}:{location.column}\n",
-                  file=sys.stderr)
+            self.skipped_record_decls[cursor.hash] = (typetransformer.ElaboratedType.UNION, cursor)
 
     def _process_realized_enum(self, name, cursor):
         self.output.write(f"(defcenum {name}")
@@ -115,9 +109,6 @@ class FileProcessor:
             self._process_realized_enum(name, cursor)
         else:
             self.skipped_enum_decls[cursor.hash] = cursor
-            location = cursor.location
-            print(f"WARNING: Skipping unamed enum decl at {location.file}:{location.line}:{location.column}\n",
-                  file=sys.stderr)
 
     def _process_func_decl(self, cursor):
         name = cursor.spelling
@@ -162,13 +153,12 @@ class FileProcessor:
             if decl_type:
                 del self.skipped_record_decls[base_decl_hash]
                 base_type_str = name.replace('_', '-') + "-record"
-                self._process_record(base_type_str, decl_type, base_decl)
+                self._process_record(base_type_str, decl_type[0], base_decl)
 
         if not base_type_str:
             base_type_str = self.type_processor.cursor_lisp_type_str(underlying_type)
         mangled_name = self.type_processor.mangle_typedef(cursor.spelling)
         self.output.write(f"(defctype {mangled_name} {base_type_str})\n\n")
-
 
     def _no_op(self,cursor):
         pass
@@ -217,6 +207,18 @@ class FileProcessor:
                     self._unrecognized_cursorkind(child)
                 else:
                     handler_func(self, child)
+
+        # Once the file has been processed, if there are unused enums, output them as constants:
+        for cursor in self.skipped_enum_decls.values():
+            self._process_enum_as_constants(cursor)
+        # issue warnings for anonymus structs:
+        for (type, cursor) in self.skipped_record_decls.values():
+            if type == typetransformer.ElaboratedType.STRUCT:
+                sys.stderr.write("WARNING: Skipping unamed struct decl at ")
+                sys.stderr.write(f"{location.file}:{location.line}:{location.column}\n")
+            else:
+                sys.stderr.write("WARNING: Skipping unamed union decl at ")
+                sys.stderr.write(f"{location.file}:{location.line}:{location.column}\n")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
