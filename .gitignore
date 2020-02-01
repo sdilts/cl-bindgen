@@ -1,0 +1,13 @@
+# emacs:
+*~
+
+# optimized python files:
+*.py[cod]
+__pycache__
+
+# Distritubion/packaging
+build/
+
+# environments
+.env
+.venv
