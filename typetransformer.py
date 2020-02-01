@@ -1,5 +1,11 @@
 import clang.cindex as clang
 from clang.cindex import TypeKind, CursorKind
+from enum import Enum
+
+class ElaboratedType(Enum):
+    UNION  = 0
+    STRUCT = 1
+    ENUM   = 2
 
 class TypeTransformer:
 
@@ -48,6 +54,20 @@ class TypeTransformer:
             if mangler.can_mangle(name):
                 name = mangler.mangle(name)
         return name
+
+    def determine_elaborated_type(self, type_obj):
+        named_type = type_obj.get_named_type()
+        named_type_kind = named_type.kind
+        if named_type_kind == TypeKind.RECORD:
+            type_decl = type_obj.get_declaration()
+            if type_decl.kind == CursorKind.UNION_DECL:
+                return ElaboratedType.UNION
+            elif type_decl.kind == CursorKind.STRUCT_DECL:
+                return ElaboratedType.STRUCT
+            else:
+                raise Exception(f"Unknown cursorkind: {type_decl.kind}")
+        elif named_type_kind == TypeKind.ENUM:
+            return ElaboratedType.ENUM
 
     def cursor_lisp_type_str(self, type_obj):
         assert(type(type_obj) == clang.Type)
