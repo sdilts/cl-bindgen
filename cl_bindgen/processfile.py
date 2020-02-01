@@ -221,31 +221,3 @@ class FileProcessor:
             else:
                 sys.stderr.write("WARNING: Skipping unamed union decl at ")
                 sys.stderr.write(f"{location.file}:{location.line}:{location.column}\n")
-
-if __name__ == "__main__":
-
-    if len(sys.argv) < 2:
-        print(f"Not enough arguments: {len(sys.argv)} given", file=sys.stderr)
-        exit(1)
-
-    u_managler = UnderscoreMangler()
-    k_mangler = KeywordMangler()
-    wlr_mangler = PrefixMangler("wlr_", "wlr:")
-    wl_mangler = PrefixMangler("wl_", "wl:")
-
-    # manglers are applied in the order that they are given in these lists:
-    # enum manglers transform enum fields, e.g. FOO, BAR in enum { FOO, BAR }
-    enum_manglers = [k_mangler, u_managler]
-    # type mangers are applied to struct names, function names, and type names
-    type_managlers = [wl_mangler, wlr_mangler, u_managler]
-    # name manglers are applied to constants and parameters
-    name_managlers = [u_managler]
-    # typdef manglers are applied to typdefs
-    typedef_manglers = [k_mangler, u_managler]
-    processor = FileProcessor(sys.stdout,
-                              enum_manglers=enum_manglers,
-                              type_manglers=type_managlers,
-                              name_manglers=name_managlers,
-                              typedef_manglers=typedef_manglers)
-
-    processor.process_file(sys.argv[1], args=sys.argv[2:1])
