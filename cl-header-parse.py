@@ -214,8 +214,11 @@ if __name__ == "__main__":
     wlr_mangler = PrefixMangler("wlr_", "wlr:")
     wl_mangler = PrefixMangler("wl_", "wl:")
     # manglers are applied in the order that they are given in these lists:
+    # enum manglers transform enum fields, e.g. FOO in enum { FOO, BAR }
     enum_manglers = [k_mangler, u_managler]
+    # type mangers are applied to struct names, function names, and type names
     type_managlers = [wl_mangler, wlr_mangler, u_managler]
+    # name manglers are applied to constants, and parameters
     name_managlers = [u_managler]
     processor = FileProcessor(sys.stdout,
                               enum_manglers=enum_manglers,
