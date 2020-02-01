@@ -188,13 +188,12 @@ class FileProcessor:
     }
 
     def process_file(self,filepath, args=[]):
-        print(f"Processing file: {filepath}", file=sys.stderr)
-        print(f"Arguments to clang: {args}", file=sys.stderr)
-
         if not os.path.isfile(filepath):
             print(f"Error: file doesn't exist: {filepath}", file=sys.stderr)
             return 1
 
+        print(f"Processing file: {filepath}", file=sys.stderr)
+        print(f"Arguments to clang: {args}", file=sys.stderr)
 
         index = clang.Index.create()
         tu = index.parse(filepath, args=args,
