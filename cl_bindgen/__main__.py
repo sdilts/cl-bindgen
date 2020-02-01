@@ -31,7 +31,7 @@ def main():
                                           typedef_manglers=typedef_manglers,
                                           constant_manglers=constant_manglers)
 
-    processor.process_file(sys.argv[1], args=sys.argv[2:1])
+    sys.exit(processor.process_file(sys.argv[1], args=sys.argv[2:1]))
 
 if __name__ == "__main__":
     main()

@@ -193,7 +193,8 @@ class FileProcessor:
 
         if not os.path.isfile(filepath):
             print(f"Error: file doesn't exist: {filepath}", file=sys.stderr)
-            exit(1)
+            return 1
+
 
         index = clang.Index.create()
         tu = index.parse(filepath, args=args,
