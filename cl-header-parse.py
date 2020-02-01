@@ -92,20 +92,34 @@ class FileProcessor:
         self.output.write(")\n\n")
 
     def _process_typedef_decl(self, cursor):
-        print("Processing typedef decl\n", file=sys.stderr)
+        location = cursor.location
+        print(f"WARNING: Not processing typedef decl {location.file}:{location.line}:{location.column}\n",
+              file=sys.stderr)
+
+    def _process_union_decl(self, cursor):
+        location = cursor.location
+        print(f"WARNING: Not processing union decl {location.file}:{location.line}:{location.column}\n",
+              file=sys.stderr)
+
+
+    def _process_var_decl(self, cursor):
+        location = cursor.location
+        print(f"WARNING: Not processing var decl{location.file}:{location.line}:{location.column}\n",
+              file=sys.stderr)
 
     def _unrecognized_cursorkind(self, cursor):
-        print(f"Don't recognize cursor:", file=sys.stderr)
-        print("Source location", cursor.location.file, file=sys.stderr)
-        print("Kind:", cursor.kind, file=sys.stderr)
-        print("Spelling:", cursor.spelling, file=sys.stderr)
+        location = cursor.location
+        print(f"WARNING: Not processing {cursor.kind} {location.file}:{location.line}:{location.column}\n",
+              file=sys.stderr)
 
     visit_table = {
         clang.CursorKind.MACRO_DEFINITION : _process_macro_def,
-        clang.CursorKind.STRUCT_DECL : _process_struct_decl,
-        clang.CursorKind.ENUM_DECL : _process_enum_decl,
+        clang.CursorKind.STRUCT_DECL   : _process_struct_decl,
+        clang.CursorKind.ENUM_DECL     : _process_enum_decl,
         clang.CursorKind.FUNCTION_DECL : _process_func_decl,
-        clang.CursorKind.TYPEDEF_DECL : _process_typedef_decl
+        clang.CursorKind.TYPEDEF_DECL  : _process_typedef_decl,
+        clang.CursorKind.UNION_DECL    : _process_union_decl,
+        clang.CursorKind.VAR_DECL      : _process_var_decl
     }
 
     def process_file(self,filepath, args=[]):
