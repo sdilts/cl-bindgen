@@ -147,14 +147,28 @@ class FileProcessor:
         self.output.write(")\n\n")
 
     def _process_typedef_decl(self, cursor):
+        name = cursor.spelling
         underlying_type = cursor.underlying_typedef_type
         base_decl = underlying_type.get_declaration()
         base_decl_hash = base_decl.hash
+        base_type_str = None
+        # Ensure that the type we are typdefing wasn't skipped:
         if base_decl_hash in self.skipped_enum_decls:
-            self._process_enum_decl(base_decl)
-        elif base_decl_hash in self.skipped_record_decls:
-            print("Base decl:", base_decl.type.kind, file=sys.stderr)
-            print("Underlying decl:", underlying_type.kind, file=sys.stderr)
+            del self.skipped_enum_decls[base_decl_hash]
+            base_type_str = name.replace('_', '-') + "-enum"
+            self._process_realized_enum(base_type_str, base_decl)
+        else:
+            decl_type = self.skipped_record_decls.get(base_decl_hash)
+            if decl_type:
+                del self.skipped_record_decls[base_decl_hash]
+                base_type_str = name.replace('_', '-') + "-record"
+                self._process_record(base_type_str, decl_type, base_decl)
+
+        if not base_type_str:
+            base_type_str = self.type_processor.cursor_lisp_type_str(underlying_type)
+        mangled_name = self.type_processor.mangle_typedef(cursor.spelling)
+        self.output.write(f"(defctype {mangled_name} {base_type_str})\n\n")
+
 
     def _no_op(self,cursor):
         pass
