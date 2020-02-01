@@ -48,6 +48,12 @@ class FileProcessor:
             self.output.write(f"\n  ({name} {field.enum_value})")
         self.output.write(")\n\n")
 
+    def _process_enum_as_constants(self, cursor):
+        for field in cursor.get_children():
+            field_name = self._mangle_thing(field.spelling, self.name_manglers)
+            self.output.write(f"(defconstant +{field_name}+ {field.enum_value})\n")
+        self.output.write("\n")
+
     def _process_enum_decl(self, cursor):
         name = cursor.spelling
         if name:
