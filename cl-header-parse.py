@@ -30,7 +30,7 @@ class FileProcessor:
 
     def _process_macro_def(self, cursor):
         location = cursor.location
-        spelling = cursor.spelling
+        spelling = self._mangle_thing(cursor.spelling, self.name_manglers)
         print(f"Found macro {spelling} definition in: {location.file}:{location.line}:{location.column}\n",
               file=sys.stderr)
         self.output.write("#| MACRO_DEFINITION\n")
