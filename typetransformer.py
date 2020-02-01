@@ -127,6 +127,8 @@ class TypeTransformer:
 
         elif kind == TypeKind.FUNCTIONPROTO:
             return f":pointer ; function ptr {type_obj.spelling}\n"
+        elif kind == TypeKind.ENUM:
+            return ":int ; " + self.mangle_type(type_obj.spelling) + "\n"
 
         raise Exception(f"Don't know how to handle type: {type_obj.spelling} {kind}")
         return type_obj.spelling
