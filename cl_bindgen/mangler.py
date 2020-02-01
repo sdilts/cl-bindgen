@@ -27,6 +27,20 @@ class KeywordMangler:
     def mangle(self, string):
         return ':' + string
 
+class ConstantMangler:
+
+    def __init__(self):
+        pass
+
+    def can_mangle(self, string):
+        return True
+
+    def mangle(self, string):
+        print("Const mangler sees:", string)
+        # Remove any possible package prefix and save it:
+        (pkg_prefix, colon, symb) = string.rpartition(':')
+        return pkg_prefix + ':+' + symb + '+'
+
 class UnderscoreMangler:
 
     def __init(self):

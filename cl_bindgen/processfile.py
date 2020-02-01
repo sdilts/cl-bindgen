@@ -4,8 +4,8 @@ from typing import NamedTuple
 
 import clang.cindex as clang
 
-from mangler import UnderscoreMangler, KeywordMangler, PrefixMangler, RegexSubMangler
-import typetransformer
+from cl_bindgen.mangler import UnderscoreMangler, KeywordMangler, PrefixMangler, RegexSubMangler
+import cl_bindgen.typetransformer as typetransformer
 
 # name managler interface:
 # can_mangle(string): returns true if the entity knows how to mangle the string
@@ -14,11 +14,12 @@ import typetransformer
 class FileProcessor:
 
     def __init__(self, output, enum_manglers=[], type_manglers=[],
-                 name_manglers=[], typedef_manglers=[]):
+                 name_manglers=[], typedef_manglers=[], constant_manglers=[]):
         self.output = output
         self.enum_manglers = enum_manglers
         # self.type_manglers = type_manglers
         self.name_manglers = name_manglers
+        self.constant_manglers = constant_manglers
 
         self.type_processor = typetransformer.TypeTransformer(type_manglers, typedef_manglers)
 
@@ -34,11 +35,11 @@ class FileProcessor:
 
     def _process_macro_def(self, cursor):
         location = cursor.location
-        spelling = self._mangle_thing(cursor.spelling, self.name_manglers)
+        spelling = self._mangle_thing(cursor.spelling.lower(), self.constant_manglers)
         print(f"Found macro {spelling} definition in: {location.file}:{location.line}:{location.column}\n",
               file=sys.stderr)
         self.output.write("#| MACRO_DEFINITION\n")
-        self.output.write(f"(defconstant +{spelling}+ ACTUAL_VALUE_HERE)\n")
+        self.output.write(f"(defconstant {spelling} ACTUAL_VALUE_HERE)\n")
         self.output.write("|#\n\n")
 
     def _process_record(self, name, actual_type, cursor):
@@ -51,7 +52,7 @@ class FileProcessor:
         this_type = cursor.type
 
         for field in this_type.get_fields():
-            field_name = self._mangle_thing(field.spelling, self.name_manglers)
+            field_name = self._mangle_thing(field.spelling.lower(), self.name_manglers)
             if field.is_anonymous():
                 assert(field.type.kind == clang.TypeKind.ELABORATED)
                 inner_name = name + '-' + field_name
@@ -74,7 +75,7 @@ class FileProcessor:
         sys.stdout.write(output)
 
     def _process_struct_decl(self, cursor):
-        name = cursor.spelling
+        name = cursor.spelling.lower()
         if name:
             mangled_name = self.type_processor.mangle_type(name)
             self._process_record(mangled_name, typetransformer.ElaboratedType.STRUCT, cursor)
@@ -82,7 +83,7 @@ class FileProcessor:
             self.skipped_record_decls[cursor.hash] = (typetransformer.ElaboratedType.STRUCT, cursor)
 
     def _process_union_decl(self, cursor):
-        name = cursor.spelling
+        name = cursor.spelling.lower()
         if name:
             mangled_name = self.type_processor.mangle_type(name)
             self._process_record(mangled_name, typetransformer.ElaboratedType.UNION, cursor)
@@ -92,19 +93,19 @@ class FileProcessor:
     def _process_realized_enum(self, name, cursor):
         self.output.write(f"(defcenum {name}")
         for field in cursor.get_children():
-            name = self._mangle_thing(field.spelling, self.enum_manglers)
+            name = self._mangle_thing(field.spelling.lower(), self.enum_manglers)
 
             self.output.write(f"\n  ({name} {field.enum_value})")
         self.output.write(")\n\n")
 
     def _process_enum_as_constants(self, cursor):
         for field in cursor.get_children():
-            field_name = self._mangle_thing(field.spelling, self.name_manglers)
-            self.output.write(f"(defconstant +{field_name}+ {field.enum_value})\n")
+            field_name = self._mangle_thing(field.spelling.lower(), self.constant_manglers)
+            self.output.write(f"(defconstant {field_name} {field.enum_value})\n")
         self.output.write("\n")
 
     def _process_enum_decl(self, cursor):
-        name = cursor.spelling
+        name = cursor.spelling.lower()
         if name:
             name = self.type_processor.mangle_type(name)
             self._process_realized_enum(name, cursor)
@@ -112,7 +113,7 @@ class FileProcessor:
             self.skipped_enum_decls[cursor.hash] = cursor
 
     def _process_func_decl(self, cursor):
-        name = cursor.spelling
+        name = cursor.spelling.lower()
         # mangle function names the same way as typenames:
         mangled_name = self.type_processor.mangle_type(name)
 
@@ -127,7 +128,7 @@ class FileProcessor:
         self.output.write(f" {lisp_ret_type}")
 
         for arg in cursor.get_arguments():
-            arg_name = arg.spelling
+            arg_name = arg.spelling.lower()
             arg_type_name = self.type_processor.cursor_lisp_type_str(arg.type)
             arg_mangled_name = self._mangle_thing(arg_name, self.name_manglers)
 
@@ -139,7 +140,7 @@ class FileProcessor:
         self.output.write(")\n\n")
 
     def _process_typedef_decl(self, cursor):
-        name = cursor.spelling
+        name = cursor.spelling.lower()
         underlying_type = cursor.underlying_typedef_type
         base_decl = underlying_type.get_declaration()
         base_decl_hash = base_decl.hash
@@ -158,7 +159,7 @@ class FileProcessor:
 
         if not base_type_str:
             base_type_str = self.type_processor.cursor_lisp_type_str(underlying_type)
-        mangled_name = self.type_processor.mangle_typedef(cursor.spelling)
+        mangled_name = self.type_processor.mangle_typedef(cursor.spelling.lower())
         self.output.write(f"(defctype {mangled_name} {base_type_str})\n\n")
 
     def _no_op(self,cursor):
@@ -222,6 +223,7 @@ class FileProcessor:
                 sys.stderr.write(f"{location.file}:{location.line}:{location.column}\n")
 
 if __name__ == "__main__":
+
     if len(sys.argv) < 2:
         print(f"Not enough arguments: {len(sys.argv)} given", file=sys.stderr)
         exit(1)
