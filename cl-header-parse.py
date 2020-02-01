@@ -13,13 +13,14 @@ import typetransformer
 
 class FileProcessor:
 
-    def __init__(self, output, enum_manglers=[], type_manglers=[], name_manglers=[]):
+    def __init__(self, output, enum_manglers=[], type_manglers=[],
+                 name_manglers=[], typedef_manglers=[]):
         self.output = output
         self.enum_manglers = enum_manglers
         # self.type_manglers = type_manglers
         self.name_manglers = name_manglers
 
-        self.type_processor = typetransformer.TypeTransformer(type_manglers)
+        self.type_processor = typetransformer.TypeTransformer(type_manglers, typedef_manglers)
 
         self.skipped_record_decls = dict()
         self.skipped_enum_decls = dict()
@@ -234,11 +235,14 @@ if __name__ == "__main__":
     enum_manglers = [k_mangler, u_managler]
     # type mangers are applied to struct names, function names, and type names
     type_managlers = [wl_mangler, wlr_mangler, u_managler]
-    # name manglers are applied to constants, and parameters
+    # name manglers are applied to constants and parameters
     name_managlers = [u_managler]
+    # typdef manglers are applied to typdefs
+    typedef_manglers = [k_mangler, u_managler]
     processor = FileProcessor(sys.stdout,
                               enum_manglers=enum_manglers,
                               type_manglers=type_managlers,
-                              name_manglers=name_managlers)
+                              name_manglers=name_managlers,
+                              typedef_manglers=typedef_manglers)
 
     processor.process_file(sys.argv[1], args=sys.argv[2:1])

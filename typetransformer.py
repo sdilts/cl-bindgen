@@ -45,8 +45,16 @@ class TypeTransformer:
         "int8_t"  : ":int8",
     }
 
-    def __init__(self, type_manglers):
+    def __init__(self, type_manglers, typedef_manglers):
         self.manglers = type_manglers
+        self.typedef_manglers = typedef_manglers
+
+    def mangle_typedef(self, typedef_name):
+        name = typedef_name
+        for mangler in self.typedef_manglers:
+            if mangler.can_mangle(name):
+                name = mangler.mangle(name)
+        return name
 
     def mangle_type(self, type_name):
         name = type_name
