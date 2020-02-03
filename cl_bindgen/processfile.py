@@ -293,7 +293,7 @@ class FileProcessor:
     def process_file(self,filepath, args=[]):
         if not os.path.isfile(filepath):
             print(f"Error: file doesn't exist: {filepath}", file=sys.stderr)
-            return 1
+            return 2
 
         print(f"Processing file: {filepath}", file=sys.stderr)
         print(f"Arguments to clang: {args}", file=sys.stderr)
