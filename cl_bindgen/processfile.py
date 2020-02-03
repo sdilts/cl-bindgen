@@ -281,15 +281,15 @@ class FileProcessor:
               file=sys.stderr)
 
     visit_table = {
-        clang.CursorKind.MACRO_DEFINITION : _process_macro_def,
-        clang.CursorKind.STRUCT_DECL   : _process_struct_decl,
-        clang.CursorKind.ENUM_DECL     : _process_enum_decl,
-        clang.CursorKind.FUNCTION_DECL : _process_func_decl,
-        clang.CursorKind.TYPEDEF_DECL  : _process_typedef_decl,
-        clang.CursorKind.UNION_DECL    : _process_union_decl,
-        clang.CursorKind.VAR_DECL      : _process_var_decl,
+        clang.CursorKind.MACRO_DEFINITION    : _process_macro_def,
+        clang.CursorKind.STRUCT_DECL         : _process_struct_decl,
+        clang.CursorKind.ENUM_DECL           : _process_enum_decl,
+        clang.CursorKind.FUNCTION_DECL       : _process_func_decl,
+        clang.CursorKind.TYPEDEF_DECL        : _process_typedef_decl,
+        clang.CursorKind.UNION_DECL          : _process_union_decl,
+        clang.CursorKind.VAR_DECL            : _process_var_decl,
         clang.CursorKind.INCLUSION_DIRECTIVE : _no_op,
-        clang.CursorKind.MACRO_INSTANTIATION       : _no_op,
+        clang.CursorKind.MACRO_INSTANTIATION : _no_op,
     }
 
     def process_file(self,filepath, args=[]):
