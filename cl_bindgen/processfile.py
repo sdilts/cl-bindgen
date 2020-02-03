@@ -179,7 +179,7 @@ class FileProcessor:
         sys.stdout.write(output)
 
     def _process_struct_decl(self, cursor):
-        name = cursor.spelling.lower()
+        name = cursor.spelling
         if name:
             mangled_name = self._mangle_string(name.lower(), self.type_manglers)
             self._process_record(mangled_name, self.ElaboratedType.STRUCT, cursor)
@@ -209,7 +209,7 @@ class FileProcessor:
         self.output.write("\n")
 
     def _process_enum_decl(self, cursor):
-        name = cursor.spelling.lower()
+        name = cursor.spelling
         if name:
             name = self._mangle_string(name.lower(), self.type_manglers)
             self._process_realized_enum(name, cursor)
