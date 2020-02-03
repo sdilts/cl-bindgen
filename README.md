@@ -4,26 +4,26 @@ A command line tool and library for creating common lisp language bindings
 from C header files
 
 ## Processing individual files
-To process individual files, use the `-i` flag and specify one or
+To process individual files, use the `f` command and specify one or
 more files to process. By default, output will be printed to
 stdout, but the output file can be specified with the `-o` option.
 
 ``` bash
 # Process test.h and print the results to stdout:
-cl-bindgen -i test.h
+cl-bindgen f test.h
 # Process the files test1.h, test2.h, and place the output in
 output.lisp:
-cl-bindgen -i test1.h test2.h -o output.lisp
+cl-bindgen f -o output.lisp test1.h test2.h
 ```
 
 ## Batch file processing
 CL-bindgen can use a yaml file to process many header
 files with a single invocation. You are also able to specify
-options that aren't available on the command line. Use the `-b` flag
-to specify a batch file to process:
+options that aren't available on the command line. Use the `b` command
+to specify one or more batch files to process:
 
 ``` bash
-cl-bindgen -b my_library.yaml
+cl-bindgen b my_library.yaml
 ```
 
 ### Batch file format
