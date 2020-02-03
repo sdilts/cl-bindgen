@@ -324,6 +324,3 @@ class FileProcessor:
             else:
                 sys.stderr.write("WARNING: Skipping unamed union decl at ")
                 sys.stderr.write(f"{location.file}:{location.line}:{location.column}\n")
-
-def process_batch_file(batchfile, manglers):
-    return 0

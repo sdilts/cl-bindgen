@@ -4,6 +4,9 @@ import processfile
 
 import processfile
 
+def process_batch_file(batchfile, manglers):
+    return 0
+
 def arg_batch_files(arguments, manglers):
     """ Perform the actions described in batch_files using the given manglers """
     for batch_file in arguments.inputs:
