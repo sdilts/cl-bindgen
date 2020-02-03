@@ -35,20 +35,6 @@ Required Fields:
 + files: a list of files to process
 Optional Fields:
 + package: The name of the Common Lisp package of the generated file
-+ use_grovel: produce a file that CFFI-GROVEL can use to generate
-  bindings. If specified, the option grovel\_file must also be
-  specified.
-+ grovel_file: The file where the grovel bindings are placed. See the
-  option use\_grovel
-+ exclude_types: Don't generate the listed entities found in the
-  files. Valid values are:
-  - functions
-  - macros
-  - enums
-  - variables
-  - structures
-  - unions
-  - typedefs
 
 ## Customizing generated symbols
 CL-bindgen attempts to reasonably translate C style names into lisp
