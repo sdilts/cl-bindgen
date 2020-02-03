@@ -1,37 +1,145 @@
 import sys
 import os.path
 from typing import NamedTuple
+from enum import Enum
 
 import clang.cindex as clang
+from clang.cindex import TypeKind, CursorKind
 
 from cl_bindgen.mangler import UnderscoreMangler, KeywordMangler, PrefixMangler, RegexSubMangler
-import cl_bindgen.typetransformer as typetransformer
 
 class FileProcessor:
+
+    class ElaboratedType(Enum):
+        UNION  = 0
+        STRUCT = 1
+        ENUM   = 2
+
+    # This table contains types that don't have to be inferred or otherwise
+    # built based off of the cursor type
+    _builtin_table = {
+        TypeKind.BOOL       : ":bool",
+        TypeKind.DOUBLE     : ":double",
+        TypeKind.FLOAT      : ":float",
+        TypeKind.INT        : ":int",
+        TypeKind.LONG       : ":long",
+        TypeKind.LONGDOUBLE : ":long-double",
+        TypeKind.LONGLONG   : ":long-long",
+        TypeKind.SHORT      : ":short",
+        TypeKind.UINT       : ":unsigned-int",
+        TypeKind.ULONG      : ":unsigned-long",
+        TypeKind.ULONGLONG  : ":unsigned-long-long",
+        TypeKind.USHORT     : ":unsigned-short",
+        TypeKind.VOID       : ":void",
+        # Char types:
+        # According to http://clang-developers.42468.n3.nabble.com/CXTypeKind-for-plain-char-td4036902.html,
+        # we can ignore signedness for CHAR_U and CHAR_S, but not UCHAR and SCHAR:
+        TypeKind.CHAR_U : ":char",
+        TypeKind.CHAR_S : ":char",
+        TypeKind.SCHAR  : ":signed-char",
+        TypeKind.UCHAR  : "::unsigned-char"
+    }
+
+   # There a few typdefs that are known to CFFI that we don't need to manually define:
+    _known_typedefs = {
+        "uint64_t" : ":uint64",
+        "uint32_t" : ":uint32",
+        "uint16_t" : ":uint16",
+        "uint8_t"  : ":uint8",
+        "int64_t" : ":int64",
+        "int32_t" : ":int32",
+        "int16_t" : ":int16",
+        "int8_t"  : ":int8",
+    }
 
     def __init__(self, output, enum_manglers=[], type_manglers=[],
                  name_manglers=[], typedef_manglers=[], constant_manglers=[]):
         self.output = output
         self.enum_manglers = enum_manglers
-        # self.type_manglers = type_manglers
+        self.type_manglers = type_manglers
+        self.typedef_manglers = typedef_manglers
         self.name_manglers = name_manglers
         self.constant_manglers = constant_manglers
-
-        self.type_processor = typetransformer.TypeTransformer(type_manglers, typedef_manglers)
 
         self.skipped_record_decls = dict()
         self.skipped_enum_decls = dict()
 
     @staticmethod
-    def _mangle_thing(thing, manglers):
+    def _mangle_string(thing, manglers):
         for mangler in manglers:
             if mangler.can_mangle(thing):
                 thing = mangler.mangle(thing)
         return thing
 
+    def _determine_elaborated_type(self, type_obj):
+        named_type = type_obj.get_named_type()
+        named_type_kind = named_type.kind
+        if named_type_kind == TypeKind.RECORD:
+            type_decl = type_obj.get_declaration()
+            if type_decl.kind == CursorKind.UNION_DECL:
+                return self.ElaboratedType.UNION
+            elif type_decl.kind == CursorKind.STRUCT_DECL:
+                return self.ElaboratedType.STRUCT
+            else:
+                raise Exception(f"Unknown cursorkind: {type_decl.kind}")
+        elif named_type_kind == TypeKind.ENUM:
+            return self.ElaboratedType.ENUM
+
+    def _cursor_lisp_type_str(self, type_obj):
+        assert(type(type_obj) == clang.Type)
+        kind = type_obj.kind
+        known_type = self._builtin_table.get(kind)
+        if known_type:
+            return known_type
+        elif kind == TypeKind.TYPEDEF:
+            type_decl = type_obj.get_declaration()
+            # try the known typedefs:
+            type_decl_str = type_decl.type.spelling
+            known_type = self._known_typedefs.get(type_decl_str)
+            if known_type:
+                return known_type
+            else:
+                # assume that the typedef name is precded by ":":
+                return ":" + type_decl_str
+        elif kind == TypeKind.POINTER:
+            # emit the type of pointer:
+            pointee_type = type_obj.get_pointee()
+            type_str = "(:pointer " + self._cursor_lisp_type_str(pointee_type) + ")"
+            return type_str
+        elif kind == TypeKind.ELABORATED:
+            # Either a struct, union, or enum: (any type that looks like "struct foo", "enum foo", etc
+            named_type = type_obj.get_named_type()
+            named_type_kind = named_type.kind
+            if named_type_kind == TypeKind.RECORD:
+                type_decl = type_obj.get_declaration()
+                mangled_name = self._mangle_string(type_decl.spelling, self.type_manglers)
+                if type_decl.kind == CursorKind.UNION_DECL:
+                    return "(:union " + mangled_name + ")"
+                elif type_decl.kind == CursorKind.STRUCT_DECL:
+                    return "(:struct " + mangled_name + ")"
+                else:
+                    raise Exception("Unknown cursorkind")
+            elif named_type_kind == TypeKind.ENUM:
+                return ":int ; " + self._mangle_string(named_type.spelling, self.type_manglers) + "\n"
+        elif kind == TypeKind.INCOMPLETEARRAY:
+            elem_type = type_obj.element_type
+            return "(:pointer " + self._cursor_lisp_type_str(elem_type) + ") ; array \n"
+        elif kind == TypeKind.CONSTANTARRAY:
+            elem_type = type_obj.element_type
+            num_elems = type_obj.element_count
+            type_str = self._cursor_lisp_type_str(elem_type)
+            return f"(:pointer {type_str}) ; array (size {num_elems})\n"
+        elif kind == TypeKind.FUNCTIONPROTO:
+            return f":pointer ; function ptr {type_obj.spelling}\n"
+        elif kind == TypeKind.ENUM:
+            return ":int ; " + self._mangle_string(type_obj.spelling, self.type_manglers) + "\n"
+
+        raise Exception(f"Don't know how to handle type: {type_obj.spelling} {kind}")
+        return type_obj.spelling
+
     def _process_macro_def(self, cursor):
         location = cursor.location
-        spelling = self._mangle_thing(cursor.spelling.lower(), self.constant_manglers)
+        spelling = self._mangle_string(cursor.spelling.lower(), self.constant_manglers)
         print(f"Found macro {spelling} definition in: {location.file}:{location.line}:{location.column}\n",
               file=sys.stderr)
         self.output.write("#| MACRO_DEFINITION\n")
@@ -40,7 +148,7 @@ class FileProcessor:
 
     def _process_record(self, name, actual_type, cursor):
         output = ""
-        if actual_type == typetransformer.ElaboratedType.UNION:
+        if actual_type == self.ElaboratedType.UNION:
             output += f"(defcunion {name}"
         else:
             output += f"(defcstruct {name}"
@@ -48,16 +156,16 @@ class FileProcessor:
         this_type = cursor.type
 
         for field in this_type.get_fields():
-            field_name = self._mangle_thing(field.spelling.lower(), self.name_manglers)
+            field_name = self._mangle_string(field.spelling.lower(), self.name_manglers)
             if field.is_anonymous():
                 assert(field.type.kind == clang.TypeKind.ELABORATED)
                 inner_name = name + '-' + field_name
-                actual_elaborated_type = self.type_processor.determine_elaborated_type(field.type)
-                if actual_elaborated_type == typetransformer.ElaboratedType.ENUM:
+                actual_elaborated_type = self._determine_elaborated_type(field.type)
+                if actual_elaborated_type == self.ElaboratedType.ENUM:
                     decl = field.type.get_declaration()
                     self._process_enum_as_constants(decl)
                     ret_val = ":int"
-                elif actual_elaborated_type == typetransformer.ElaboratedType.UNION:
+                elif actual_elaborated_type == self.ElaboratedType.UNION:
                     self._process_record(inner_name, actual_elaborated_type, field)
                     field_type =  "(:union " + name + '-' + field_name + ")"
                 else:
@@ -65,7 +173,7 @@ class FileProcessor:
                     self._process_record(inner_name, actual_elaborated_type, field)
                     field_type = "(:struct " + name + '-' + field_name + ")"
             else:
-                field_type = self.type_processor.cursor_lisp_type_str(field.type)
+                field_type = self._cursor_lisp_type_str(field.type)
             output += f"\n  ({field_name} {field_type})"
         output += ")\n\n"
         sys.stdout.write(output)
@@ -73,37 +181,37 @@ class FileProcessor:
     def _process_struct_decl(self, cursor):
         name = cursor.spelling.lower()
         if name:
-            mangled_name = self.type_processor.mangle_type(name)
-            self._process_record(mangled_name, typetransformer.ElaboratedType.STRUCT, cursor)
+            mangled_name = self._mangle_string(name.lower(), self.type_manglers)
+            self._process_record(mangled_name, self.ElaboratedType.STRUCT, cursor)
         else:
-            self.skipped_record_decls[cursor.hash] = (typetransformer.ElaboratedType.STRUCT, cursor)
+            self.skipped_record_decls[cursor.hash] = (self.ElaboratedType.STRUCT, cursor)
 
     def _process_union_decl(self, cursor):
         name = cursor.spelling.lower()
         if name:
-            mangled_name = self.type_processor.mangle_type(name)
-            self._process_record(mangled_name, typetransformer.ElaboratedType.UNION, cursor)
+            mangled_name = self.mangle_type(name, self.type_manglers)
+            self._process_record(mangled_name, self.ElaboratedType.UNION, cursor)
         else:
-            self.skipped_record_decls[cursor.hash] = (typetransformer.ElaboratedType.UNION, cursor)
+            self.skipped_record_decls[cursor.hash] = (self.ElaboratedType.UNION, cursor)
 
     def _process_realized_enum(self, name, cursor):
         self.output.write(f"(defcenum {name}")
         for field in cursor.get_children():
-            name = self._mangle_thing(field.spelling.lower(), self.enum_manglers)
+            name = self._mangle_string(field.spelling.lower(), self.enum_manglers)
 
             self.output.write(f"\n  ({name} {field.enum_value})")
         self.output.write(")\n\n")
 
     def _process_enum_as_constants(self, cursor):
         for field in cursor.get_children():
-            field_name = self._mangle_thing(field.spelling.lower(), self.constant_manglers)
+            field_name = self._mangle_string(field.spelling.lower(), self.constant_manglers)
             self.output.write(f"(defconstant {field_name} {field.enum_value})\n")
         self.output.write("\n")
 
     def _process_enum_decl(self, cursor):
         name = cursor.spelling.lower()
         if name:
-            name = self.type_processor.mangle_type(name)
+            name = self._mangle_string(name.lower(), self.type_manglers)
             self._process_realized_enum(name, cursor)
         else:
             self.skipped_enum_decls[cursor.hash] = cursor
@@ -111,10 +219,10 @@ class FileProcessor:
     def _process_func_decl(self, cursor):
         name = cursor.spelling.lower()
         # mangle function names the same way as typenames:
-        mangled_name = self.type_processor.mangle_type(name)
+        mangled_name = self._mangle_string(name, self.type_manglers)
 
         ret_type = cursor.result_type
-        lisp_ret_type = self.type_processor.cursor_lisp_type_str(ret_type)
+        lisp_ret_type = self._cursor_lisp_type_str(ret_type)
 
         self.output.write("(defcfun ")
         if name != mangled_name:
@@ -125,8 +233,8 @@ class FileProcessor:
 
         for arg in cursor.get_arguments():
             arg_name = arg.spelling.lower()
-            arg_type_name = self.type_processor.cursor_lisp_type_str(arg.type)
-            arg_mangled_name = self._mangle_thing(arg_name, self.name_manglers)
+            arg_type_name = self._cursor_lisp_type_str(arg.type)
+            arg_mangled_name = self._mangle_string(arg_name, self.name_manglers)
 
             if arg_name == None:
                 arg_name = "unknown"
@@ -154,8 +262,9 @@ class FileProcessor:
                 self._process_record(base_type_str, decl_type[0], base_decl)
 
         if not base_type_str:
-            base_type_str = self.type_processor.cursor_lisp_type_str(underlying_type)
-        mangled_name = self.type_processor.mangle_typedef(cursor.spelling.lower())
+            base_type_str = self._cursor_lisp_type_str(underlying_type)
+        mangled_name = self._mangle_string(cursor.spelling.lower(),
+                                                         self.typedef_manglers)
         self.output.write(f"(defctype {mangled_name} {base_type_str})\n\n")
 
     def _no_op(self,cursor):
@@ -211,7 +320,7 @@ class FileProcessor:
             self._process_enum_as_constants(cursor)
         # issue warnings for anonymus structs:
         for (type, cursor) in self.skipped_record_decls.values():
-            if type == typetransformer.ElaboratedType.STRUCT:
+            if type == self.ElaboratedType.STRUCT:
                 sys.stderr.write("WARNING: Skipping unamed struct decl at ")
                 sys.stderr.write(f"{location.file}:{location.line}:{location.column}\n")
             else:
