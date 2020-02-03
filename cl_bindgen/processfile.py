@@ -6,8 +6,6 @@ from enum import Enum
 import clang.cindex as clang
 from clang.cindex import TypeKind, CursorKind
 
-from cl_bindgen.mangler import UnderscoreMangler, KeywordMangler, PrefixMangler, RegexSubMangler
-
 class FileProcessor:
 
     class ElaboratedType(Enum):
