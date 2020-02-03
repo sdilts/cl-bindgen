@@ -7,10 +7,6 @@ import clang.cindex as clang
 from cl_bindgen.mangler import UnderscoreMangler, KeywordMangler, PrefixMangler, RegexSubMangler
 import cl_bindgen.typetransformer as typetransformer
 
-# name managler interface:
-# can_mangle(string): returns true if the entity knows how to mangle the string
-# mangle(string): returns the mangled string
-
 class FileProcessor:
 
     def __init__(self, output, enum_manglers=[], type_manglers=[],
