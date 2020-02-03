@@ -35,6 +35,7 @@ Required Fields:
 + files: a list of files to process
 Optional Fields:
 + package: The name of the Common Lisp package of the generated file
++ arguments: Arguments to pass to clang
 
 ## Customizing generated symbols
 CL-bindgen attempts to reasonably translate C style names into lisp
