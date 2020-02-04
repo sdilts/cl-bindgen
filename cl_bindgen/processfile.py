@@ -269,7 +269,8 @@ class FileProcessor:
 
     def _process_var_decl(self, cursor):
         location = cursor.location
-        print(f"WARNING: Not processing var decl {location.file}:{location.line}:{location.column}\n",
+        var_name = cursor.spelling
+        print(f"WARNING: Not processing var decl {var_name} at {location.file}:{location.line}:{location.column}\n",
               file=sys.stderr)
 
     def _unrecognized_cursorkind(self, cursor):
@@ -316,8 +317,8 @@ class FileProcessor:
         # issue warnings for anonymus structs:
         for (type, cursor) in self.skipped_record_decls.values():
             if type == self.ElaboratedType.STRUCT:
-                sys.stderr.write("WARNING: Skipping unamed struct decl at ")
+                sys.stderr.write("WARNING: Skipped unamed struct decl at ")
                 sys.stderr.write(f"{location.file}:{location.line}:{location.column}\n")
             else:
-                sys.stderr.write("WARNING: Skipping unamed union decl at ")
+                sys.stderr.write("WARNING: Skipped unamed union decl at ")
                 sys.stderr.write(f"{location.file}:{location.line}:{location.column}\n")
