@@ -66,6 +66,12 @@ def dispatch_from_arguments(arguments, manglers):
                                 default=[],
                                 help="Specify include directories to be passed to libclang",
                                 action='append')
+    process_parser.add_argument('-p',
+                                metavar='package',
+                                dest='package',
+                                default=None,
+                                help="Output an in-package form with the given package at the top of the output",
+                                action='append')
     process_parser.set_defaults(func=arg_process_files)
 
     args = parser.parse_args()
