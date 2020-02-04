@@ -43,11 +43,11 @@ def _arg_process_files(arguments, options):
     try:
         processfile.process_files(arguments.inputs, options)
     except FileNotFoundError as err:
-        print(f"Error: File {err.strerror} not found. Exiting with completed work.",
+        print(f'Error: Input file "{err.strerror}" not found.\nNo output produced.',
               file=sys.stderr)
         exit(err.errno)
     except IsADirectoryError as err:
-        print(f"Error: {err.strerror} is a directory. Exiting with completed work.",
+        print(f'Error: "{err.strerror}" is a directory.\nNo output produced.',
               file=sys.stderr)
         exit(err.errno)
 
