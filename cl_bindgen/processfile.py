@@ -306,13 +306,11 @@ def _unrecognized_cursorkind(cursor):
     print(f"WARNING: Not processing {cursor.kind} {location.file}:{location.line}:{location.column}\n",
           file=sys.stderr)
 
-def process_file(filepath, options):
+def _process_file(filepath, output, options):
     if os.path.isdir(filepath):
         raise IsADirectoryError(errno.EISDIR, filepath)
     elif not os.path.isfile(filepath):
         raise FileNotFoundError(errno.ENOENT, filepath)
-
-    output = ProcessOptions.output_file_from_option(options, 'w')
 
     index = clang.Index.create()
     tu = index.parse(filepath, args=options.arguments,
@@ -322,13 +320,10 @@ def process_file(filepath, options):
 
     data = _ParseData(dict(), dict())
 
-    if options.package:
-        output.write(f'(cl:in-package #:{options.package})\n\n')
-
     for child in root_cursor.get_children():
         location = child.location
         if location.file and location.file.name == filepath:
-            handler_func = process_file._visit_table.get(child.kind)
+            handler_func = _process_file._visit_table.get(child.kind)
             if handler_func:
                 handler_func(child, data, output, options)
             else:
@@ -345,7 +340,7 @@ def process_file(filepath, options):
         else:
             sys.stderr.write("WARNING: Skipped unamed union decl at ")
             sys.stderr.write(f"{location.file}:{location.line}:{location.column}\n")
-process_file._visit_table = {
+_process_file._visit_table = {
     clang.CursorKind.MACRO_DEFINITION    : _process_macro_def,
     clang.CursorKind.STRUCT_DECL         : _process_struct_decl,
     clang.CursorKind.ENUM_DECL           : _process_enum_decl,
@@ -356,3 +351,30 @@ process_file._visit_table = {
     clang.CursorKind.INCLUSION_DIRECTIVE : _no_op,
     clang.CursorKind.MACRO_INSTANTIATION : _no_op,
 }
+
+def process_file(filepath, options):
+    output = ProcessOptions.output_file_from_option(options, 'w')
+
+    if options.package:
+        output.write(f'(cl:in-package #:{options.package})\n\n')
+
+    _process_file(filepath, output, options)
+
+    if not output == sys.stderr and not output == sys.stdout:
+        output.close()
+
+def process_files(files, options):
+    """ Process the given files using the given options
+    """
+    output = ProcessOptions.output_file_from_option(options, 'w')
+
+    if options.package:
+        output.write(f'(cl:in-package #:{options.package})\n\n')
+
+    try:
+        for f in files:
+            output.write(f";; next section imported from file {f}\n\n")
+            _process_file(f, output, options)
+    finally:
+        if not output == sys.stderr and not output == sys.stdout:
+            output.close()

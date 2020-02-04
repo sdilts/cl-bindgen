@@ -39,9 +39,9 @@ def _arg_batch_files(arguments, options):
 def _arg_process_files(arguments, options):
     """ Process the files using the given parsed arguments and options """
 
+    options = _add_args_to_option(options, arguments)
     try:
-        for f in arguments.inputs:
-            processfile.process_file(f, options)
+        processfile.process_files(arguments.inputs, options)
     except FileNotFoundError as err:
         print(f"Error: File {err.strerror} not found. Exiting with completed work.",
               file=sys.stderr)
@@ -100,8 +100,6 @@ def dispatch_from_arguments(arguments, options):
         exit(1)
 
     args = parser.parse_args(arguments)
-
-    options = _add_args_to_option(options, args)
 
     return args.func(args, options)
 
