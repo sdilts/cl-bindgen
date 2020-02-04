@@ -173,7 +173,7 @@ class FileProcessor:
                 field_type = self._cursor_lisp_type_str(field.type)
             output += f"\n  ({field_name} {field_type})"
         output += ")\n\n"
-        sys.stdout.write(output)
+        self.output.write(output)
 
     def _process_struct_decl(self, cursor):
         name = cursor.spelling
