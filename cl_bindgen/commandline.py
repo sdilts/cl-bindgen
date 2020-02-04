@@ -38,6 +38,8 @@ def processor_from_options(optiondata):
                          constant_manglers=optiondata.constant_manglers)
 
 def _add_args_to_option(option, args):
+    """ Return a new option object with the options specified by `args` an based on 'option' """
+    option = copy.copy(option)
     if args.output:
         if args.output == ":stdout":
             option.output = sys.stdout
@@ -130,9 +132,7 @@ def dispatch_from_arguments(arguments, options):
 
     args = parser.parse_args(arguments)
 
-    # We modify options, so copy it so the argument isn't affected:
-    options = copy.copy(options)
-    _add_args_to_option(options, args)
+    options = _add_args_to_option(options, args)
 
     return args.func(args, options)
 
