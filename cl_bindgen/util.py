@@ -5,8 +5,8 @@ import copy
 import yaml
 import errno
 
-import processfile
-from processfile import ProcessOptions
+import cl_bindgen.processfile
+from cl_bindgen.processfile import ProcessOptions
 
 def _add_dict_to_option(option, dictionary):
     option = copy.copy(option)
