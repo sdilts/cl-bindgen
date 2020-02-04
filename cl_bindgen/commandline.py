@@ -43,7 +43,7 @@ def _add_args_to_option(option, args):
             option.output = sys.stdout
         elif args.output == ":stderr":
             option.output = sys.stderr
-        elif not isinstance(args.output, io.IOBase):
+        else: # not isinstance(args.output, io.IOBase):
             # TODO: do something intellegent here:
             print(args.output)
             raise Exception("Not implemented")
@@ -99,7 +99,7 @@ def _build_parser():
     process_parser.add_argument('inputs',nargs='+',
                                 metavar="input files",
                                 help="The input files to cl-bindgen")
-    process_parser.add_argument('-o', default=sys.stdout,
+    process_parser.add_argument('-o',
                                 metavar='output',
                                 dest='output',
                                 help="Specify where to place the generated output.")
