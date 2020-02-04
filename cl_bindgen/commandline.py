@@ -52,7 +52,7 @@ def _add_args_to_option(option, args):
             option.arguments.append('-I')
             option.arguments.append(item)
     if args.package:
-        option.package = package
+        option.package = args.package
 
 def process_batch_file(batchfile, options):
     """ Perform the actions specified in the batch file with the given base options
@@ -73,6 +73,9 @@ def _arg_process_files(arguments, options):
     """ Process the files using the given parsed arguments and options """
 
     processor = processor_from_options(options)
+
+    if options.package:
+        output_package_include(options.output, options.package)
 
     for f in arguments.inputs:
         processor.process_file(f, options.arguments)
@@ -112,9 +115,7 @@ def _build_parser():
     process_parser.add_argument('-p',
                                 metavar='package',
                                 dest='package',
-                                default=None,
-                                help="Output an in-package form with the given package at the top of the output",
-                                action='append')
+                                help="Output an in-package form with the given package at the top of the output")
     process_parser.set_defaults(func=_arg_process_files)
     return parser
 
