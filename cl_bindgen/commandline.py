@@ -122,12 +122,16 @@ def _build_parser():
 def dispatch_from_arguments(arguments, options):
     """ Use the given arguments and manglers to perform the main task of cl-bindgen """
 
-    # We modify options, so copy it so the argument isn't affected:
-    options = copy.copy(options)
-
     parser = _build_parser()
 
+    if not len(arguments) > 1:
+        parser.print_help()
+        exit(1)
+
     args = parser.parse_args(arguments)
+
+    # We modify options, so copy it so the argument isn't affected:
+    options = copy.copy(options)
     _add_args_to_option(options, args)
 
     return args.func(args, options)
