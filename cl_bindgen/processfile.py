@@ -1,5 +1,6 @@
 import sys
 import os.path
+import errno
 from enum import Enum
 
 import clang.cindex as clang
@@ -291,10 +292,10 @@ class FileProcessor:
     }
 
     def process_file(self,filepath, args=[]):
-        if not os.path.isfile(filepath):
-            print(f"Error: file doesn't exist: {filepath}", file=sys.stderr)
-            return 2
-
+        if os.path.isdir(filepath):
+            raise IsADirectoryError(errno.EISDIR, filepath)
+        elif not os.path.isfile(filepath):
+            raise FileNotFoundError(errno.ENOENT, filepath)
 
         index = clang.Index.create()
         tu = index.parse(filepath, args=args,
