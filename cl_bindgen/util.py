@@ -131,8 +131,3 @@ def dispatch_from_arguments(arguments, options):
     args = parser.parse_args(arguments)
 
     return args.func(args, options)
-
-
-if __name__ == "__main__":
-    options = ProcessOptions()
-    dispatch_from_arguments(sys.argv[1:], options)
