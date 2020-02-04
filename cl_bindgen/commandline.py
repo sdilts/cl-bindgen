@@ -1,45 +1,88 @@
 import argparse
 import sys
-import processfile
+import io
+import copy
+from dataclasses import dataclass, field
+import typing
 
 import processfile
 
-def process_batch_file(batchfile, manglers):
+@dataclass
+class ProcessOptions:
+    typedef_manglers: list = field(default_factory=lambda: [])
+    enum_manglers: list = field(default_factory=lambda: [])
+    type_manglers: list = field(default_factory=lambda: [])
+    name_manglers: list = field(default_factory=lambda: [])
+    constant_manglers: list = field(default_factory=lambda: [])
+
+    output: typing.IO = field(default_factory=lambda: sys.stdout)
+    package : str = None
+    arguments: list = field(default_factory=lambda: [])
+
+    def __copy__(self, memo=None):
+        return ProcessOptions(list(self.typedef_manglers),
+                              list(self.enum_manglers),
+                              list(self.type_manglers),
+                              list(self.name_manglers),
+                              list(self.constant_manglers),
+                              output=self.output,
+                              package=copy.copy(self.package),
+                              arguments=copy.copy(self.arguments))
+
+def processor_from_options(optiondata):
+    return processfile.FileProcessor(optiondata.output,
+                         enum_manglers=optiondata.enum_manglers,
+                         type_manglers=optiondata.type_manglers,
+                         name_manglers=optiondata.name_manglers,
+                         typedef_manglers=optiondata.typedef_manglers,
+                         constant_manglers=optiondata.constant_manglers)
+
+def _add_args_to_option(option, args):
+    if args.output:
+        if args.output == ":stdout":
+            option.output = sys.stdout
+        elif args.output == ":stderr":
+            option.output = sys.stderr
+        elif not isinstance(args.output, io.IOBase):
+            # TODO: do something intellegent here:
+            print(args.output)
+            raise Exception("Not implemented")
+    if args.includes:
+        for item in args.includes:
+            option.arguments.append('-I')
+            option.arguments.append(item)
+    if args.package:
+        option.package = package
+
+def process_batch_file(batchfile, options):
+    """ Perform the actions specified in the batch file with the given base options
+
+    If options are specified in the batch file that override the options given, those
+    options will be used instead.
+    """
+
     return 0
 
-def arg_batch_files(arguments, manglers):
+def _arg_batch_files(arguments, options):
     """ Perform the actions described in batch_files using the given manglers """
+
     for batch_file in arguments.inputs:
-        processfile.process_batch_file(batch_file, manglers)
+        processfile.process_batch_file(batch_file, options)
 
-def arg_process_files(arguments, manglers):
-    """ Process the files using the given parsed arguments and manglers """
-    output = arguments.output
-    if output == ":stdout":
-        output = sys.stdout
-    elif output == ":stderr":
-        output = sys.stderr
-    else:
-        # TODO: do something intellegent here:
-        raise Exception("Not implemented")
+def _arg_process_files(arguments, options):
+    """ Process the files using the given parsed arguments and options """
 
-    # TODO: figure out how to unpack the manglers:
+    processor = processor_from_options(options)
 
-    processor = processfile.FileProcessor(output)
-
-    # Add '-I' to the includes so clang understands them:
-    includes = ['-I ' + item for item in arguments.includes]
     for f in arguments.inputs:
-        processor.process_file(f, includes)
+        processor.process_file(f, options.arguments)
 
-def dispatch_from_arguments(arguments, manglers):
-    """ Use the given arguments and manglers to perform the main task of cl-bindgen """
+def _build_parser():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--version',action='version',
                         version='CL-BINDGEN 0.1.0',
                         help="Print the version information")
-
     subparsers = parser.add_subparsers()
 
     batch_parser = subparsers.add_parser('batch', aliases=['b'],
@@ -48,7 +91,7 @@ def dispatch_from_arguments(arguments, manglers):
     batch_parser.add_argument('inputs', nargs='+',
                               metavar='batch files',
                               help="The batch files to process")
-    batch_parser.set_defaults(func=arg_batch_files)
+    batch_parser.set_defaults(func=_arg_batch_files)
 
 
     process_parser = subparsers.add_parser('files',aliases=['f'],
@@ -72,13 +115,23 @@ def dispatch_from_arguments(arguments, manglers):
                                 default=None,
                                 help="Output an in-package form with the given package at the top of the output",
                                 action='append')
-    process_parser.set_defaults(func=arg_process_files)
+    process_parser.set_defaults(func=_arg_process_files)
+    return parser
 
-    args = parser.parse_args()
-    return args.func(args, manglers)
+def dispatch_from_arguments(arguments, options):
+    """ Use the given arguments and manglers to perform the main task of cl-bindgen """
+
+    # We modify options, so copy it so the argument isn't affected:
+    options = copy.copy(options)
+
+    parser = _build_parser()
+
+    args = parser.parse_args(arguments)
+    _add_args_to_option(options, args)
+
+    return args.func(args, options)
 
 
 if __name__ == "__main__":
-    import sys
-    manglers = dict()
-    dispatch_from_arguments(sys.argv[1:], manglers)
+    options = ProcessOptions()
+    dispatch_from_arguments(sys.argv[1:], options)
