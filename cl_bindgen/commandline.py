@@ -56,6 +56,9 @@ def _add_args_to_option(option, args):
     if args.package:
         option.package = args.package
 
+def output_package_include(output, package):
+    output.write(f'(cl:in-package :{package})\n\n')
+
 def process_batch_file(batchfile, options):
     """ Perform the actions specified in the batch file with the given base options
 
