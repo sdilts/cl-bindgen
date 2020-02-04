@@ -56,7 +56,7 @@ def processor_from_options(optiondata):
             output_file)
 
 def _add_args_to_option(option, args):
-    """ Return a new option object with the options specified by `args` an based on 'option' """
+    """ Return a new option object with the options specified by `args` and based on 'option' """
     option = copy.copy(option)
     if args.output:
         option.output = args.output
@@ -81,7 +81,7 @@ def process_batch_file(batchfile, options):
     return 0
 
 def _arg_batch_files(arguments, options):
-    """ Perform the actions described in batch_files using the given manglers """
+    """ Perform the actions described in batch_files using `options` as the defaults """
 
     for batch_file in arguments.inputs:
         processfile.process_batch_file(batch_file, options)
