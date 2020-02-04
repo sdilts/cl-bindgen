@@ -1,6 +1,5 @@
 import sys
 import os.path
-from typing import NamedTuple
 from enum import Enum
 
 import clang.cindex as clang
