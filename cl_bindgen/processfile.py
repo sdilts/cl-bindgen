@@ -294,8 +294,6 @@ class FileProcessor:
             print(f"Error: file doesn't exist: {filepath}", file=sys.stderr)
             return 2
 
-        print(f"Processing file: {filepath}", file=sys.stderr)
-        print(f"Arguments to clang: {args}", file=sys.stderr)
 
         index = clang.Index.create()
         tu = index.parse(filepath, args=args,
