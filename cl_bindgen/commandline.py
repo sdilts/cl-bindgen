@@ -3,9 +3,25 @@ import sys
 import io
 import copy
 import yaml
+import errno
 
 import processfile
 from processfile import ProcessOptions
+
+def _add_dict_to_option(option, dictionary):
+    option = copy.copy(option)
+
+    output = dictionary.get('output')
+    args = dictionary.get('arguments')
+    package = dictionary.get('package')
+    if output:
+        option.output = output
+    if args:
+        options.arguments.extend(args)
+    if package:
+        option.package = package
+
+    return option
 
 
 def _add_args_to_option(option, args):
@@ -21,12 +37,25 @@ def _add_args_to_option(option, args):
         option.package = args.package
     return option
 
+def _verify_document(document):
+    return 'files' in document and 'output' in document
+
 def process_batch_file(batchfile, options):
     """ Perform the actions specified in the batch file with the given base options
 
     If options are specified in the batch file that override the options given, those
     options will be used instead.
     """
+    with open(batchfile, 'r') as f:
+        data = yaml.load_all(f, Loader=yaml.Loader)
+        for document in data:
+            if not _verify_document(document):
+                # TODO: raise exception with real information instead of exiting
+                print("Batch file is not in the correct format. Please see the documentation",
+                      file=sys.stderr)
+                exit(errno.EINVAL)
+            options = _add_dict_to_option(options, document)
+            processfile.process_files(document['files'], options)
 
     return 0
 
@@ -34,7 +63,7 @@ def _arg_batch_files(arguments, options):
     """ Perform the actions described in batch_files using `options` as the defaults """
 
     for batch_file in arguments.inputs:
-        processfile.process_batch_file(batch_file, options)
+        process_batch_file(batch_file, options)
 
 def _arg_process_files(arguments, options):
     """ Process the files using the given parsed arguments and options """
