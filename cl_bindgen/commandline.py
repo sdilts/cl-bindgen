@@ -15,7 +15,7 @@ class ProcessOptions:
     name_manglers: list = field(default_factory=lambda: [])
     constant_manglers: list = field(default_factory=lambda: [])
 
-    output: typing.IO = field(default_factory=lambda: sys.stdout)
+    output: str = field(default_factory=lambda: ":stdout")
     package : str = None
     arguments: list = field(default_factory=lambda: [])
 
@@ -29,32 +29,44 @@ class ProcessOptions:
                               package=copy.copy(self.package),
                               arguments=copy.copy(self.arguments))
 
+def file_from_option(option, open_args):
+    """ Open the file specified by `option` """
+    if option.output == ":stdout":
+        return sys.stdout
+    elif option.output == ":stderr":
+        return sys.stderr
+    else:
+        # TODO: try to do something intellegent here to avoid/warn when overwriting files:
+        try:
+            return open(option.output, open_args)
+        except IsADirectoryError as err:
+            print(f"Error: Specified output file {err.filename} is a directory",
+                  file=sys.stderr)
+            exit(err.errno)
+
+
 def processor_from_options(optiondata):
-    return processfile.FileProcessor(optiondata.output,
+    output_file = file_from_option(optiondata, 'w')
+    return (processfile.FileProcessor(output_file,
                          enum_manglers=optiondata.enum_manglers,
                          type_manglers=optiondata.type_manglers,
                          name_manglers=optiondata.name_manglers,
                          typedef_manglers=optiondata.typedef_manglers,
-                         constant_manglers=optiondata.constant_manglers)
+                                      constant_manglers=optiondata.constant_manglers),
+            output_file)
 
 def _add_args_to_option(option, args):
     """ Return a new option object with the options specified by `args` an based on 'option' """
     option = copy.copy(option)
     if args.output:
-        if args.output == ":stdout":
-            option.output = sys.stdout
-        elif args.output == ":stderr":
-            option.output = sys.stderr
-        else: # not isinstance(args.output, io.IOBase):
-            # TODO: do something intellegent here:
-            print(args.output)
-            raise Exception("Not implemented")
+        option.output = args.output
     if args.includes:
         for item in args.includes:
             option.arguments.append('-I')
             option.arguments.append(item)
     if args.package:
         option.package = args.package
+    return option
 
 def output_package_include(output, package):
     output.write(f'(cl:in-package :{package})\n\n')
@@ -77,7 +89,7 @@ def _arg_batch_files(arguments, options):
 def _arg_process_files(arguments, options):
     """ Process the files using the given parsed arguments and options """
 
-    processor = processor_from_options(options)
+    (processor, output_file) = processor_from_options(options)
 
     if options.package:
         output_package_include(options.output, options.package)
