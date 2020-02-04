@@ -2,6 +2,7 @@ import sys
 import os.path
 import errno
 import copy
+import io
 from enum import Enum
 from dataclasses import dataclass, field
 from collections import namedtuple
@@ -353,20 +354,20 @@ _process_file._visit_table = {
 }
 
 def process_file(filepath, options):
-    output = ProcessOptions.output_file_from_option(options, 'w')
-
-    if options.package:
-        output.write(f'(cl:in-package #:{options.package})\n\n')
-
-    _process_file(filepath, output, options)
-
-    if not output == sys.stderr and not output == sys.stdout:
-        output.close()
+    process_files([filepath], options)
 
 def process_files(files, options):
     """ Process the given files using the given options
+
+    If a file in the list isn't found, nothing will be written to the output file.
     """
-    output = ProcessOptions.output_file_from_option(options, 'w')
+
+    # do a santity check on the output before doing all of that processing:
+    if not (options == ":stdout" or options == ":stderr") and os.path.isdir(options.output):
+        raise IsADirectoryError(errno.EISDIR, options.output)
+
+    output = io.StringIO()
+    actual_output = None
 
     if options.package:
         output.write(f'(cl:in-package #:{options.package})\n\n')
@@ -375,6 +376,11 @@ def process_files(files, options):
         for f in files:
             output.write(f";; next section imported from file {f}\n\n")
             _process_file(f, output, options)
+
+        actual_output = ProcessOptions.output_file_from_option(options, 'w')
+
+        actual_output.write(output.getvalue())
     finally:
-        if not output == sys.stderr and not output == sys.stdout:
-            output.close()
+        output.close()
+        if actual_output and not (actual_output == sys.stderr or actual_output == sys.stdout):
+            actual_output.close()
