@@ -180,11 +180,11 @@ def _process_macro_def(cursor, data, output, options):
     output.write("|#\n\n")
 
 def _process_record(name, actual_type, cursor, output, options):
-    output_str = ""
+    text_stream = io.StringIO()
     if actual_type == ElaboratedType.UNION:
-        output_str += f"(defcunion {name}"
+        text_stream.write(f"(defcunion {name}")
     else:
-        output_str += f"(defcstruct {name}"
+        text_stream.write(f"(defcstruct {name}")
 
     this_type = cursor.type
 
@@ -207,9 +207,10 @@ def _process_record(name, actual_type, cursor, output, options):
                 field_type = "(:struct " + name + '-' + field_name + ")"
         else:
             field_type = _cursor_lisp_type_str(field.type, options)
-        output_str += f"\n  ({field_name} {field_type})"
-    output_str += ")\n\n"
-    output.write(output_str)
+        text_stream.write(f"\n  ({field_name} {field_type})")
+    text_stream.write(")\n\n")
+    output.write(text_stream.getvalue())
+    text_stream.close()
 
 def _process_struct_decl(cursor, data, output, options):
     name = cursor.spelling
