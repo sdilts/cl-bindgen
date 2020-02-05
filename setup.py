@@ -19,7 +19,7 @@ with open('LICENSE') as f:
     proj_license = f.read()
 
 setup(name="cl_bindgen",
-      version='0.1.0',
+      version='1.0.0',
       description='command line tool and library for creating Common Lisp language bindings from C header files',
       long_description=readme,
       license=proj_license,
