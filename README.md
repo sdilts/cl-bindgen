@@ -1,4 +1,4 @@
-# CL-bindgen
+# cl-bindgen
 
 A command line tool and library for creating Common Lisp language bindings
 from C header files
@@ -7,7 +7,7 @@ Features:
 + Generates CFFI bindgings for function declarations, enums, variables, unions,
   and structures.
 + Handles nested and anonymous structures, unions, and enums.
-+ Warns when it cannot produce a correct binding
++ Warns when it cannot produce a correct binding.
 + Documentation comments from the C source files are lispified and
   included with the generated bindings when available.
 + Provides a powerful way to customize how names are translated into
@@ -41,7 +41,7 @@ cl-bindgen f -o output.lisp test1.h test2.h
 ```
 
 ## Batch file processing
-CL-bindgen can use a yaml file to process many header
+cl-bindgen can use a yaml file to process many header
 files with a single invocation. Use the `b` command
 to specify one or more batch files to process:
 
@@ -60,7 +60,7 @@ Optional Fields:
 + `package` : The name of the Common Lisp package of the generated file
 + `arguments` : Arguments to pass to clang
 
-To see example batch files, look in the 
+To see example batch files, look in the
 [examples](https://github.com/sdilts/cl-bindgen/tree/master/examples)
 directory.
 
@@ -101,7 +101,7 @@ fields:
 
 ### The `mangler` Module
 
-CL-bindgen uses a set of classes called manglers to translate C
+cl-bindgen uses a set of classes called manglers to translate C
 names so that they follow lisp naming conventions. Each mangler class
 provides one or more tranformations to a symbol. For example, the
 `UnderscoreMangler` converts underscores (`_`) into dashes
@@ -142,6 +142,7 @@ The `util` module provides two functions: `process_batch_file` and
 ### Examples
 
 The best example of how to use cl-bindgen as a library is to look at its main
-function found in [cl\_bindgen/\_\_main\_\_.py](https://github.com/sdilts/cl-bindgen/blob/master/cl_bindgen/__main__.py). In it, cl-bindgen's
-default options are set, then passed to `dispatch_from_arguments` to
-run the utility.
+function found in
+[cl\_bindgen/\_\_main\_\_.py](https://github.com/sdilts/cl-bindgen/blob/master/cl_bindgen/__main__.py).
+In it, cl-bindgen's default options are set, then passed to `dispatch_from_arguments`
+to run the utility.
