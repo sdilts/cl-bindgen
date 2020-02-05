@@ -8,19 +8,18 @@ requirements = [
 classifiers = [
     'Intended Audience :: Developers',
     'Topic :: Software Development',
-    'License :: MIT License',
     'Programming Language :: Python :: 3',
 ]
 
 with open('README.md') as f:
     readme = f.read()
 
-with open('LICENSE') as f:
-    proj_license = f.read()
+proj_license = 'MIT'
 
 setup(name="cl_bindgen",
       version='1.0.0',
-      description='command line tool and library for creating Common Lisp language bindings from C header files',
+      description='Command line tool and library for creating Common Lisp language bindings from C header files',
+      long_description_content_type='text/markdown',
       long_description=readme,
       license=proj_license,
       author="Stuart Dilts",
