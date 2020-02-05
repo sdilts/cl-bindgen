@@ -399,7 +399,7 @@ def process_files(files, options):
     """
 
     # do a santity check on the output before doing all of that processing:
-    if not (options == ":stdout" or options == ":stderr") and os.path.isdir(options.output):
+    if os.path.isdir(options.output):
         raise IsADirectoryError(errno.EISDIR, options.output)
 
     output = io.StringIO()
