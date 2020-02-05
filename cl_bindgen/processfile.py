@@ -10,6 +10,23 @@ from collections import namedtuple
 import clang.cindex as clang
 from clang.cindex import TypeKind, CursorKind
 
+# the pip version of clang doesn't have the comment functions,
+# so define _output_comment accordingly
+if hasattr(clang.Cursor, 'raw_comment'):
+    def _lispify_comment(comment):
+        return comment.replace('*','').replace('/','').strip()
+
+    def _output_comment(cursor, output, before='', after=''):
+        comment = cursor.raw_comment
+        if comment:
+            comment = _lispify_comment(comment)
+            output.write(before)
+            output.write(f'  "{comment}"')
+            output.write(after)
+else:
+    def _output_comment(cursor, output, before='', after=''):
+        pass
+
 @dataclass
 class ProcessOptions:
     typedef_manglers: list = field(default_factory=lambda: [])
