@@ -261,10 +261,12 @@ def _process_func_decl(cursor, data, output, options):
 
     output.write(")\n\n")
 
-def _process_typedef_decl(cursor, data, output, options):
-    name = cursor.spelling.lower()
-    underlying_type = cursor.underlying_typedef_type
-    base_decl = underlying_type.get_declaration()
+def _expand_skipped_type(name, s_type, data, output, options):
+    """ Expand the skipped type and return its string representation
+
+    If the type has already been expanded, return None
+    """
+    base_decl = s_type.get_declaration()
     base_decl_hash = base_decl.hash
     base_type_name = None
     # Ensure that the type we are typdefing wasn't skipped:
@@ -282,7 +284,13 @@ def _process_typedef_decl(cursor, data, output, options):
                 base_type_name = f"(:union {base_type_str})"
             else:
                 base_type_name = f"(:struct {base_type_str})"
+    return base_type_name
 
+
+def _process_typedef_decl(cursor, data, output, options):
+    name = cursor.spelling.lower()
+    underlying_type = cursor.underlying_typedef_type
+    base_type_name = _expand_skipped_type(name, underlying_type, data, output, options)
     if not base_type_name:
         base_type_name = _cursor_lisp_type_str(underlying_type, options)
     mangled_name = _mangle_string(cursor.spelling.lower(),
@@ -293,10 +301,18 @@ def _no_op(cursor, data, output, options):
     pass
 
 def _process_var_decl(cursor, data, output, options):
-    location = cursor.location
-    var_name = cursor.spelling
-    print(f"WARNING: Not processing var decl {var_name} at {location.file}:{location.line}:{location.column}\n",
-          file=sys.stderr)
+    name = cursor.spelling.lower()
+    underlying_type = cursor.type
+    base_type_name = _expand_skipped_type(name, underlying_type, data, output, options)
+    if not base_type_name:
+        base_type_name = _cursor_lisp_type_str(underlying_type, options)
+    if underlying_type.is_const_qualified():
+        mangled_name = _mangle_string(name, options.constant_manglers)
+        output.write(f'(defcvar ("{cursor.spelling}" {mangled_name} :read-only t) {base_type_name})\n\n')
+    else:
+        mangled_name = _mangle_string(name, options.name_manglers)
+        output.write(f'(defcvar ("{cursor.spelling}" {mangled_name}) {base_type_name})\n\n')
+
 
 def _unrecognized_cursorkind(cursor):
     location = cursor.location
