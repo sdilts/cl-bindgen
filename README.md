@@ -4,7 +4,7 @@ A command line tool and library for creating Common Lisp language bindings
 from C header files
 
 Features:
-+ Generates CFFI bindgings for function declarations, enums, variables, unions,
++ Generates CFFI bindings for function declarations, enums, variables, unions,
   and structures.
 + Handles nested and anonymous structures, unions, and enums.
 + Warns when it cannot produce a correct binding.
