@@ -11,8 +11,7 @@ stdout, but the output file can be specified with the `-o` option.
 ``` bash
 # Process test.h and print the results to stdout:
 cl-bindgen f test.h
-# Process the files test1.h, test2.h, and place the output in
-output.lisp:
+# Process the files test1.h, test2.h, and place the output in output.lisp:
 cl-bindgen f -o output.lisp test1.h test2.h
 ```
 
@@ -27,15 +26,16 @@ cl-bindgen b my_library.yaml
 ```
 
 ### Batch file format
-Each yaml document corresponds to one output file.
-Examples can be found in the test directory.
+Batch files use the YAML format. Mutliple documents can be contained in each input file.
+Examples can be found in the example directory.
 
 Required Fields:
-+ output: where to place the generated code
-+ files: a list of files to process
++ `output` : where to place the generated code
++ `files` : a list of files to process
+
 Optional Fields:
-+ package: The name of the Common Lisp package of the generated file
-+ arguments: Arguments to pass to clang
++ `package` : The name of the Common Lisp package of the generated file
++ `arguments` : Arguments to pass to clang
 
 ## Customizing generated symbols
 CL-bindgen attempts to reasonably translate C style names into lisp
