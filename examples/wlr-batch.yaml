@@ -1,0 +1,10 @@
+output: wlroots-types.lisp
+package: wlr
+files:
+  - /usr/local/include/wlr/types/wlr_box.h
+  - /usr/local/include/wlr/types/wlr_cursor.h
+---
+output: wlroots-other.lisp
+package: wlr
+files:
+  - /usr/local/include/wlr/backend.h
