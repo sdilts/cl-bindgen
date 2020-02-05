@@ -26,7 +26,6 @@ From source:
 ``` bash
 pip install --user .
 ```
-
 ## Processing individual files
 To process individual files, use the `f` command and specify one or
 more files to process. By default, output will be printed to
@@ -70,7 +69,7 @@ in most cases. However, if you need to customize how C names are
 converted into lisp names or embed cl-bindgen into another
 application, cl-bindgen is available as a library.
 
-The cl-bindgen is broken up into three modules: the `processfile`,
+The `cl_bindgen` package is broken up into three modules: the `processfile`,
 `mangler` and `util` modules. The `processfile` module provides the
 functions to generate the lisp bindings, the `mangler` module provides
 functions to convert C names into lisp names, and the `util` module
@@ -104,7 +103,7 @@ fields:
 cl-bindgen uses a set of classes called manglers to translate C
 names so that they follow lisp naming conventions. Each mangler class
 provides one or more tranformations to a symbol. For example, the
-`UnderscoreMangler` converts underscores (`_`) into dashes
+`UnderscoreMangler` class converts underscores (`_`) into dashes
 (`-`). A series of manglers are applied to each C name to make it
 follow lisp naming conventions.
 
