@@ -5,6 +5,13 @@ requirements = [
     'PyYAML'
 ]
 
+classifiers = [
+    'Intended Audience :: Developers',
+    'Topic :: Software Development',
+    'License :: MIT License',
+    'Programming Language :: Python :: 3',
+]
+
 with open('README.md') as f:
     readme = f.read()
 
@@ -13,7 +20,7 @@ with open('LICENSE') as f:
 
 setup(name="cl_bindgen",
       version='0.1.0',
-      description='command line tool and library for creating common lisp language bindings from C header files',
+      description='command line tool and library for creating Common Lisp language bindings from C header files',
       long_description=readme,
       license=proj_license,
       author="Stuart Dilts",
@@ -25,5 +32,6 @@ setup(name="cl_bindgen",
               'cl-bindgen = cl_bindgen.__main__:main'
           ]
       },
-      install_requires=requirements
+      install_requires=requirements,
+      classifiers=classifiers
       )
