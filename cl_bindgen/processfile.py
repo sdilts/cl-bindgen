@@ -266,24 +266,28 @@ def _process_typedef_decl(cursor, data, output, options):
     underlying_type = cursor.underlying_typedef_type
     base_decl = underlying_type.get_declaration()
     base_decl_hash = base_decl.hash
-    base_type_str = None
+    base_type_name = None
     # Ensure that the type we are typdefing wasn't skipped:
     if base_decl_hash in data.skipped_enums:
         del data.skipped_enums[base_decl_hash]
-        base_type_str = name.replace('_', '-') + "-enum"
-        _process_realized_enum(base_type_str, base_decl, output, options)
+        base_type_name = name.replace('_', '-') + "-enum"
+        _process_realized_enum(base_type_name, base_decl, output, options)
     else:
         decl_type = data.skipped_records.get(base_decl_hash)
         if decl_type:
             del data.skipped_records[base_decl_hash]
             base_type_str = name.replace('_', '-') + "-record"
             _process_record(base_type_str, decl_type[0], base_decl, output, options)
+            if decl_type[0] == ElaboratedType.UNION:
+                base_type_name = f"(:union {base_type_str})"
+            else:
+                base_type_name = f"(:struct {base_type_str})"
 
-    if not base_type_str:
-        base_type_str = _cursor_lisp_type_str(underlying_type, options)
+    if not base_type_name:
+        base_type_name = _cursor_lisp_type_str(underlying_type, options)
     mangled_name = _mangle_string(cursor.spelling.lower(),
                                                      options.typedef_manglers)
-    output.write(f"(defctype {mangled_name} {base_type_str})\n\n")
+    output.write(f"(defctype {mangled_name} {base_type_name})\n\n")
 
 def _no_op(cursor, data, output, options):
     pass
