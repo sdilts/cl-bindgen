@@ -7,6 +7,7 @@ Features:
 + Generates CFFI bindgings for function declarations, enums, variables, unions,
   and structures.
 + Handles nested and anonymous structures, unions, and enums.
++ Warns when it cannot produce a correct binding
 + Documentation comments from the C source files are lispified and
   included with the generated bindings when available.
 + Provides a powerful way to customize how names are translated into
