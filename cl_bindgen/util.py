@@ -84,7 +84,7 @@ def _build_parser():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--version',action='version',
-                        version='CL-BINDGEN 1.0.0',
+                        version='CL-BINDGEN 1.0.2',
                         help="Print the version information")
     subparsers = parser.add_subparsers()
 

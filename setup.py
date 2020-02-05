@@ -17,7 +17,7 @@ with open('README.md') as f:
 proj_license = 'MIT'
 
 setup(name="cl_bindgen",
-      version='1.0.0',
+      version='1.0.2',
       description='Command line tool and library for creating Common Lisp language bindings from C header files',
       long_description_content_type='text/markdown',
       long_description=readme,
