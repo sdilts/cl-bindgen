@@ -248,12 +248,14 @@ def _process_func_decl(cursor, data, output, options):
     output.write(f" {lisp_ret_type}")
 
     for arg in cursor.get_arguments():
-        arg_name = arg.spelling.lower()
+        arg_name = arg.spelling
+        if arg_name == "" or arg_name == None:
+            arg_name = "unknown"
+        else:
+            arg_name = arg.spelling.lower()
+
         arg_type_name = _cursor_lisp_type_str(arg.type, options)
         arg_mangled_name = _mangle_string(arg_name, options.name_manglers)
-
-        if arg_name == None:
-            arg_name = "unknown"
 
         output.write(f"\n  ({arg_mangled_name} {arg_type_name})")
 
