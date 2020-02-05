@@ -57,7 +57,6 @@ class ConstantMangler:
         return True
 
     def mangle(self, string):
-        print("Const mangler sees:", string)
         # Remove any possible package prefix and save it:
         (pkg_prefix, colon, symb) = string.rpartition(':')
         return pkg_prefix + ':+' + symb + '+'
