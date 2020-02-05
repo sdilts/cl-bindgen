@@ -63,8 +63,8 @@ CL-bindgen uses a set of classes called manglers to translate C
 names so that they follow lisp naming conventions. Each mangler class
 provides one or more tranformations to a symbol. For example, the
 `UnderscoreMangler` converts underscores (`_`) into dashes
-(`-`). A series of manglers are applied to each C name to translate it
-into an lisp symbol in the order they appear in the mangler list.
+(`-`). A series of manglers are applied to each C name to make it
+follow lisp naming conventions.
 
 To maximize customization, a list of manglers is associated with each
 type of name that can be converted. Enums, variable names, typedefs,
