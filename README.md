@@ -3,9 +3,19 @@
 A command line tool and library for creating Common Lisp language bindings
 from C header files
 
+Features:
++ Generates CFFI bindgings for function declarations, enums, variables, unions,
+  and structures.
++ Handles nested and anonymous structures, unions, and enums.
++ Documentation comments from the C source files are lispified and
+  included with the generated bindings when available.
++ Provides a powerful way to customize how names are translated into
+  lisp symbols.
+
 ## Installation
 CL-bindgen requires `libclang`, which usually isn't installed beside the other Python
-dependencies when installing with pip. Use your favorite package mangager to install it.
+dependencies when installing with pip. It is recommended to install it
+first before installing cl-bindgen. Use your favorite package mangager to install it.
 
 From pip:
 ``` bash
