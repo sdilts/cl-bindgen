@@ -57,7 +57,7 @@ class ProcessOptions:
 
 _ParseData = namedtuple('ParseData', ['skipped_enums', 'skipped_records'])
 
-class ElaboratedType(Enum):
+class _ElaboratedType(Enum):
     UNION  = 0
     STRUCT = 1
     ENUM   = 2
@@ -74,13 +74,13 @@ def _determine_elaborated_type(type_obj):
     if named_type_kind == TypeKind.RECORD:
         type_decl = type_obj.get_declaration()
         if type_decl.kind == CursorKind.UNION_DECL:
-            return ElaboratedType.UNION
+            return _ElaboratedType.UNION
         elif type_decl.kind == CursorKind.STRUCT_DECL:
-            return ElaboratedType.STRUCT
+            return _ElaboratedType.STRUCT
         else:
             raise Exception(f"Unknown cursorkind: {type_decl.kind}")
     elif named_type_kind == TypeKind.ENUM:
-        return ElaboratedType.ENUM
+        return _ElaboratedType.ENUM
 
 def _cursor_lisp_type_str(type_obj, options):
     assert(type(type_obj) == clang.Type)
@@ -181,7 +181,7 @@ def _process_macro_def(cursor, data, output, options):
 
 def _process_record(name, actual_type, cursor, output, options):
     text_stream = io.StringIO()
-    if actual_type == ElaboratedType.UNION:
+    if actual_type == _ElaboratedType.UNION:
         text_stream.write(f"(defcunion {name}")
     else:
         text_stream.write(f"(defcstruct {name}")
@@ -195,11 +195,11 @@ def _process_record(name, actual_type, cursor, output, options):
             assert(field.type.kind == clang.TypeKind.ELABORATED)
             inner_name = name + '-' + field_name
             actual_elaborated_type = _determine_elaborated_type(field.type)
-            if actual_elaborated_type == ElaboratedType.ENUM:
+            if actual_elaborated_type == _ElaboratedType.ENUM:
                 decl = field.type.get_declaration()
                 _process_enum_as_constants(decl, output, options)
                 field_type = ":int"
-            elif actual_elaborated_type == ElaboratedType.UNION:
+            elif actual_elaborated_type == _ElaboratedType.UNION:
                 _process_record(inner_name, actual_elaborated_type, field, output, options)
                 field_type =  "(:union " + name + '-' + field_name + ")"
             else:
@@ -217,17 +217,17 @@ def _process_struct_decl(cursor, data, output, options):
     name = cursor.spelling
     if name:
         mangled_name = _mangle_string(name.lower(), options.type_manglers)
-        _process_record(mangled_name, ElaboratedType.STRUCT, cursor, output, options)
+        _process_record(mangled_name, _ElaboratedType.STRUCT, cursor, output, options)
     else:
-        data.skipped_records[cursor.hash] = (ElaboratedType.STRUCT, cursor)
+        data.skipped_records[cursor.hash] = (_ElaboratedType.STRUCT, cursor)
 
 def _process_union_decl(cursor, data, output, options):
     name = cursor.spelling
     if name:
         mangled_name = _mangle_string(name.lower(), options.type_manglers)
-        _process_record(mangled_name, ElaboratedType.UNION, cursor, output, options)
+        _process_record(mangled_name, _ElaboratedType.UNION, cursor, output, options)
     else:
-        data.skipped_records[cursor.hash] = (ElaboratedType.UNION, cursor)
+        data.skipped_records[cursor.hash] = (_ElaboratedType.UNION, cursor)
 
 def _process_realized_enum(name, cursor, output, options):
     output.write(f"(defcenum {name}")
@@ -302,7 +302,7 @@ def _expand_skipped_type(name, s_type, data, output, options):
             del data.skipped_records[base_decl_hash]
             base_type_str = name.replace('_', '-') + "-record"
             _process_record(base_type_str, decl_type[0], base_decl, output, options)
-            if decl_type[0] == ElaboratedType.UNION:
+            if decl_type[0] == _ElaboratedType.UNION:
                 base_type_name = f"(:union {base_type_str})"
             else:
                 base_type_name = f"(:struct {base_type_str})"
@@ -371,7 +371,7 @@ def _process_file(filepath, output, options):
         _process_enum_as_constants(cursor, output, options)
     # issue warnings for anonymus structs:
     for (type, cursor) in data.skipped_records.values():
-        if type == ElaboratedType.STRUCT:
+        if type == _ElaboratedType.STRUCT:
             sys.stderr.write("WARNING: Skipped unamed struct decl at ")
             sys.stderr.write(f"{location.file}:{location.line}:{location.column}\n")
         else:
