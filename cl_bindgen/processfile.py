@@ -177,9 +177,9 @@ def _process_macro_def(cursor, data, output, options):
 def _process_record(name, actual_type, cursor, output, options):
     text_stream = io.StringIO()
     if actual_type == _ElaboratedType.UNION:
-        text_stream.write(f"(defcunion {name}")
+        text_stream.write(f"(cffi:defcunion {name}")
     else:
-        text_stream.write(f"(defcstruct {name}")
+        text_stream.write(f"(cffi:defcstruct {name}")
 
     _output_comment(cursor, text_stream, before='\n',after='')
     this_type = cursor.type
@@ -225,7 +225,7 @@ def _process_union_decl(cursor, data, output, options):
         data.skipped_records[cursor.hash] = (_ElaboratedType.UNION, cursor)
 
 def _process_realized_enum(name, cursor, output, options):
-    output.write(f"(defcenum {name}")
+    output.write(f"(cffi:defcenum {name}")
     _output_comment(cursor, output, before='\n',after='')
     for field in cursor.get_children():
         name = _mangle_string(field.spelling.lower(), options.enum_manglers)
@@ -255,7 +255,7 @@ def _process_func_decl(cursor, data, output, options):
     ret_type = cursor.result_type
     lisp_ret_type = _cursor_lisp_type_str(ret_type, options)
 
-    output.write("(defcfun ")
+    output.write("(cffi:defcfun ")
     if name != mangled_name:
         output.write(f'("{name}" {mangled_name})')
     else:
@@ -312,7 +312,7 @@ def _process_typedef_decl(cursor, data, output, options):
         base_type_name = _cursor_lisp_type_str(underlying_type, options)
     mangled_name = _mangle_string(cursor.spelling.lower(),
                                                      options.typedef_manglers)
-    output.write(f"(defctype {mangled_name} {base_type_name})\n\n")
+    output.write(f"(cffi:defctype {mangled_name} {base_type_name})\n\n")
 
 def _no_op(cursor, data, output, options):
     pass
@@ -325,10 +325,10 @@ def _process_var_decl(cursor, data, output, options):
         base_type_name = _cursor_lisp_type_str(underlying_type, options)
     if underlying_type.is_const_qualified():
         mangled_name = _mangle_string(name, options.constant_manglers)
-        output.write(f'(defcvar ("{cursor.spelling}" {mangled_name} :read-only t) {base_type_name}')
+        output.write(f'(cffi:defcvar ("{cursor.spelling}" {mangled_name} :read-only t) {base_type_name}')
     else:
         mangled_name = _mangle_string(name, options.name_manglers)
-        output.write(f'(defcvar ("{cursor.spelling}" {mangled_name}) {base_type_name}')
+        output.write(f'(cffi:defcvar ("{cursor.spelling}" {mangled_name}) {base_type_name}')
     _output_comment(cursor, output, before='\n',after='')
     output.write(')\n\n')
 
