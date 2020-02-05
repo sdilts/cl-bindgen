@@ -14,9 +14,9 @@ Features:
   lisp symbols.
 
 ## Installation
-CL-bindgen requires `libclang`, which usually isn't installed beside the other Python
-dependencies when installing with pip. It is recommended to install it
-first before installing cl-bindgen. Use your favorite package mangager to install it.
+cl-bindgen requires `libclang`, which is not installed with the other Python
+dependencies and not available on PyPi. It is recommended to install it first before installing
+cl-bindgen. Use your distribution's package manager to install it.
 
 From pip:
 ``` bash
