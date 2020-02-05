@@ -60,13 +60,15 @@ Optional Fields:
 + `package` : The name of the Common Lisp package of the generated file
 + `arguments` : Arguments to pass to clang
 
-To see example batch files, look in the `examples` directory.
+To see example batch files, look in the 
+[examples](https://github.com/sdilts/cl-bindgen/tree/master/examples)
+directory.
 
 ## Customizing the behavior of cl-bindgen
 cl-bindgen attempts to provide a reasonable interface that is usable
 in most cases. However, if you need to customize how C names are
 converted into lisp names or embed cl-bindgen into another
-application, a cl-bindgen is available as a library.
+application, cl-bindgen is available as a library.
 
 The cl-bindgen is broken up into three modules: the `processfile`,
 `mangler` and `util` modules. The `processfile` module provides the
@@ -91,7 +93,7 @@ fields:
   for what these do.
 + `output` : The path of the file where the output is
   placed. `":stdout"` or `":stderr"` can be specified to use standard
-  out or standard error
+  out or standard error.
 + `package` : If not `None`, this specifies the package the the
   generated output should be placed in.
 + `arguments` : The command line arguments that should be given to the
@@ -140,6 +142,6 @@ The `util` module provides two functions: `process_batch_file` and
 ### Examples
 
 The best example of how to use cl-bindgen as a library is to look at its main
-function found in cl\_bind-gen/\_\_main\_\_.py. In it, cl-bindgen's
+function found in [cl\_bindgen/\_\_main\_\_.py](https://github.com/sdilts/cl-bindgen/blob/master/cl_bindgen/__main__.py). In it, cl-bindgen's
 default options are set, then passed to `dispatch_from_arguments` to
 run the utility.
