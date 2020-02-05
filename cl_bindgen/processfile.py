@@ -22,16 +22,6 @@ class ProcessOptions:
     package : str = None
     arguments: list = field(default_factory=lambda: [])
 
-    def __copy__(self, memo=None):
-        return ProcessOptions(list(self.typedef_manglers),
-                              list(self.enum_manglers),
-                              list(self.type_manglers),
-                              list(self.name_manglers),
-                              list(self.constant_manglers),
-                              output=self.output,
-                              package=copy.copy(self.package),
-                              arguments=copy.copy(self.arguments))
-
     @staticmethod
     def output_file_from_option(option, open_args):
         """ Open the file specified by `option` """
