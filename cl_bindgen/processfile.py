@@ -186,6 +186,7 @@ def _process_record(name, actual_type, cursor, output, options):
     else:
         text_stream.write(f"(defcstruct {name}")
 
+    _output_comment(cursor, text_stream, before='\n',after='')
     this_type = cursor.type
 
     for field in this_type.get_fields():
@@ -230,6 +231,7 @@ def _process_union_decl(cursor, data, output, options):
 
 def _process_realized_enum(name, cursor, output, options):
     output.write(f"(defcenum {name}")
+    _output_comment(cursor, output, before='\n',after='')
     for field in cursor.get_children():
         name = _mangle_string(field.spelling.lower(), options.enum_manglers)
 
@@ -264,6 +266,8 @@ def _process_func_decl(cursor, data, output, options):
     else:
         output.write(f'"{name}"')
     output.write(f" {lisp_ret_type}")
+
+    _output_comment(cursor, output, before='\n',after='')
 
     for arg in cursor.get_arguments():
         arg_name = arg.spelling
@@ -326,10 +330,12 @@ def _process_var_decl(cursor, data, output, options):
         base_type_name = _cursor_lisp_type_str(underlying_type, options)
     if underlying_type.is_const_qualified():
         mangled_name = _mangle_string(name, options.constant_manglers)
-        output.write(f'(defcvar ("{cursor.spelling}" {mangled_name} :read-only t) {base_type_name})\n\n')
+        output.write(f'(defcvar ("{cursor.spelling}" {mangled_name} :read-only t) {base_type_name}')
     else:
         mangled_name = _mangle_string(name, options.name_manglers)
-        output.write(f'(defcvar ("{cursor.spelling}" {mangled_name}) {base_type_name})\n\n')
+        output.write(f'(defcvar ("{cursor.spelling}" {mangled_name}) {base_type_name}')
+    _output_comment(cursor, output, before='\n',after='')
+    output.write(')\n\n')
 
 
 def _unrecognized_cursorkind(cursor):
