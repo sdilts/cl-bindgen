@@ -48,12 +48,7 @@ class ProcessOptions:
             return sys.stderr
         else:
             # TODO: try to do something intellegent here to avoid/warn when overwriting files?
-            try:
-                return open(option.output, open_args)
-            except IsADirectoryError as err:
-                print(f"Error: Specified output file {err.filename} is a directory",
-                      file=sys.stderr)
-                exit(err.errno)
+            return open(option.output, open_args)
 
 _ParseData = namedtuple('ParseData', ['skipped_enums', 'skipped_records'])
 
