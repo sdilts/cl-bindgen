@@ -5,7 +5,7 @@ import copy
 import yaml
 import errno
 
-import cl_bindgen.processfile
+import cl_bindgen.processfile as processfile
 from cl_bindgen.processfile import ProcessOptions
 
 def _add_dict_to_option(option, dictionary):
