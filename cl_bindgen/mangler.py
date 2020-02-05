@@ -57,9 +57,12 @@ class ConstantMangler:
         return True
 
     def mangle(self, string):
-        # Remove any possible package prefix and save it:
-        (pkg_prefix, colon, symb) = string.rpartition(':')
-        return pkg_prefix + ':+' + symb + '+'
+        if ':' in string:
+            # Remove any possible package prefix and save it:
+            (pkg_prefix, colon, symb) = string.rpartition(':')
+            return pkg_prefix + ':+' + symb + '+'
+        else:
+            return "+" + string + "+"
 
 class UnderscoreMangler:
     """ Converts underscores to dashes"""
