@@ -50,14 +50,43 @@ Optional Fields:
 + `arguments` : Arguments to pass to clang
 
 To see example batch files, look in the `examples` directory.
-## Customizing generated symbols
-CL-bindgen attempts to reasonably translate C style names into lisp
-ones, but there are a few cases that the default configuration makes
-no attempt to handle. In those cases, it is possible to use cl-bindgen
-as a python library to manually specify how C names are translated
-into lisp symbols.
 
-### Transforming C Names
+## Customizing the behavior of cl-bindgen
+cl-bindgen attempts to provide a reasonable interface that is usable
+in most cases. However, if you need to customize how C names are
+converted into lisp names or embed cl-bindgen into another
+application, a cl-bindgen is available as a library.
+
+The cl-bindgen is broken up into three modules: the `processfile`,
+`mangler` and `util` modules. The `processfile` module provides the
+functions to generate the lisp bindings, the `mangler` module provides
+functions to convert C names into lisp names, and the `util` module
+provides functions to use batch files and cl-bingen's command line
+interface.
+
+### The `processfile` Module
+
+This module exports two functions: `process_file` and `process_files`,
+which work on a single header file or many, respectively. Both
+functions take two arguments: the file(s) to be processed and an
+`ProcessOptions` object.
+
+The `ProcessOptions`class is the way to specify how the
+processing functions generate their output. It has the following
+fields:
+
++ `typedef_mangers`, `enum_manglers`, `type_manglers`, `name_manglers`
+  and `constant_manglers` : See the [mangler module section](#the-mangler-module)
+  for what these do.
++ `output` : The path of the file where the output is
+  placed. `":stdout"` or `":stderr"` can be specified to use standard
+  out or standard error
++ `package` : If not `None`, this specifies the package the the
+  generated output should be placed in.
++ `arguments` : The command line arguments that should be given to the
+  clang processor.
+
+### The `mangler` Module
 
 CL-bindgen uses a set of classes called manglers to translate C
 names so that they follow lisp naming conventions. Each mangler class
@@ -84,12 +113,22 @@ Mangler classes follow a simple interface:
 + `can_mangle(string)`: returns true if the mangler can perform its
   operations on the given string
 + `mangle(string)`: returns a string with the desired tranformations
-  applied to its argument.
+  applied.
 
-### Using the library
+### The `util` Module
 
-The simplest way to use the library is to copy the file at
-./examples/template.py and customize the lists of
-manglers for each type. The file is setup to process command line
-arguments in the same way as the `cl-bindgen` executable, so no other editing is
-needed in most cases.
+The `util` module provides two functions: `process_batch_file` and
+`dispatch_from_arguments`.
+
++ `process_batch_file(batch_file, options)` : Processes the given
+  batch file using `options` as the default options.
++ `dispatch_from_arguments(arguments, options)` : Uses the provided
+  command line arguments to perform the actions of cl-bindgen using
+  `options` as the default options.
+
+### Examples
+
+The best example of how to use cl-bindgen as a library is to look at its main
+function found in cl\_bind-gen/\_\_main\_\_.py. In it, cl-bindgen's
+default options are set, then passed to `dispatch_from_arguments` to
+run the utility.
