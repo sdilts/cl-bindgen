@@ -51,7 +51,7 @@ def process_batch_file(batchfile, options):
         for document in data:
             if not _verify_document(document):
                 # TODO: raise exception with real information instead of exiting
-                print("Batch file is not in the correct format. Please see the documentation",
+                print("Batch file is missing required fields. Please see the documentation",
                       file=sys.stderr)
                 exit(errno.EINVAL)
             options = _add_dict_to_option(options, document)
