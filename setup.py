@@ -25,7 +25,7 @@ setup(name="cl_bindgen",
       author="Stuart Dilts",
       author_email='stuart.dilts@gmail.com',
       url='https://github.com/sdilts/cl-bindgen',
-      download_url='https://github.com/sdilts/cl-bindgen/archive/1.0.2.tar.gz',
+      download_url='https://github.com/sdilts/cl-bindgen/archive/1.0.3.tar.gz',
       packages=['cl_bindgen'],
       entry_points={
           'console_scripts': [
