@@ -107,7 +107,7 @@ def _cursor_lisp_type_str(type_obj, options):
             return known_type
         else:
             # assume that the typedef name is precded by ":":
-            return ":" + type_decl_str
+            return _mangle_string(type_decl_str, options.typedef_manglers)
     elif kind == TypeKind.POINTER:
         # emit the type of pointer:
         pointee_type = type_obj.get_pointee()

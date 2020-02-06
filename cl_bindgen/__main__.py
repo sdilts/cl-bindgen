@@ -20,7 +20,7 @@ def main():
     typedef_manglers = [k_mangler, u_managler]
     constant_manglers = [u_managler, const_mangler]
 
-    options = ProcessOptions(typedef_manglers=type_managlers,
+    options = ProcessOptions(typedef_manglers=typedef_manglers,
                              enum_manglers=enum_manglers,
                              type_manglers=type_managlers,
                              name_manglers=name_managlers,
