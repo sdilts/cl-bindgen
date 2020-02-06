@@ -8,6 +8,11 @@ import errno
 import cl_bindgen.processfile as processfile
 from cl_bindgen.processfile import ProcessOptions
 
+class BatchException(Exception):
+
+    def __init__(self, error_string):
+        Exception.__init__(self, error_string)
+
 def _add_dict_to_option(option, dictionary):
     option = copy.copy(option)
 
@@ -50,20 +55,19 @@ def process_batch_file(batchfile, options):
         data = yaml.load_all(f, Loader=yaml.Loader)
         for document in data:
             if not _verify_document(document):
-                # TODO: raise exception with real information instead of exiting
-                print("Batch file is missing required fields. Please see the documentation",
-                      file=sys.stderr)
-                exit(errno.EINVAL)
+                raise BatchException(f'Missing fields in batchfile "{batchfile}"')
             options = _add_dict_to_option(options, document)
             processfile.process_files(document['files'], options)
-
-    return 0
 
 def _arg_batch_files(arguments, options):
     """ Perform the actions described in batch_files using `options` as the defaults """
 
-    for batch_file in arguments.inputs:
-        process_batch_file(batch_file, options)
+    try:
+        for batch_file in arguments.inputs:
+            process_batch_file(batch_file, options)
+    except BatchException as err:
+        print(f'Error: {str(err)}.\nExiting')
+        exit(errno.EINVAL)
 
 def _arg_process_files(arguments, options):
     """ Process the files using the given parsed arguments and options """
