@@ -17,7 +17,7 @@ def main():
     # name manglers are applied to parameters and variables
     name_managlers = [u_managler]
     # typdef manglers are applied to typdefs
-    typedef_manglers = [k_mangler, u_managler]
+    typedef_manglers = [u_managler]
     constant_manglers = [u_managler, const_mangler]
 
     options = ProcessOptions(typedef_manglers=typedef_manglers,
