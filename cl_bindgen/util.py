@@ -34,10 +34,8 @@ def _add_args_to_option(option, args):
     option = copy.copy(option)
     if args.output:
         option.output = args.output
-    if args.includes:
-        for item in args.includes:
-            option.arguments.append('-I')
-            option.arguments.append(item)
+    if args.arguments:
+        option.arguments.extend(args.arguments)
     if args.package:
         option.package = args.package
     return option
@@ -115,16 +113,15 @@ def _build_parser():
                                 metavar='output',
                                 dest='output',
                                 help="Specify where to place the generated output.")
-    process_parser.add_argument('-I',
-                                metavar='include directories',
-                                dest='includes',
-                                default=[],
-                                help="Specify include directories to be passed to libclang",
-                                action='append')
     process_parser.add_argument('-p',
                                 metavar='package',
                                 dest='package',
                                 help="Output an in-package form with the given package at the top of the output")
+    process_parser.add_argument('-a', metavar='compiler arguments',
+                                dest='arguments',
+                                nargs=argparse.REMAINDER,
+                                help='Consume the rest of the arguments and pass them to libclang')
+
     process_parser.set_defaults(func=_arg_process_files)
     return parser
 
