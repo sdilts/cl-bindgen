@@ -83,6 +83,11 @@ def _arg_process_files(arguments, options):
         print(f'Error: "{err.strerror}" is a directory.\nNo output produced.',
               file=sys.stderr)
         exit(err.errno)
+    except processfile.ParserException as err:
+        print(f'Error encountered while processing file:')
+        print(err.format_errors(), file=sys.stderr)
+        print('\nNo output produced', file=sys.stderr)
+        exit(1)
 
 def _build_parser():
     parser = argparse.ArgumentParser()

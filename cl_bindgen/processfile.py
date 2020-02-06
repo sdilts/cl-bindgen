@@ -27,6 +27,21 @@ else:
     def _output_comment(cursor, output, before='', after=''):
         pass
 
+class ParserException(Exception):
+
+    def __init__(self, filepath, diagnostics):
+        self.filepath = filepath
+        self.diagnostics = list(diagnostics)
+
+    def format_errors(self):
+        stream = io.StringIO()
+        stream.write(self.diagnostics[0].format())
+        for diag in self.diagnostics[1:]:
+            stream.write('\n')
+            stream.write(diag.format())
+
+        return stream.getvalue()
+
 @dataclass
 class ProcessOptions:
     typedef_manglers: list = field(default_factory=lambda: [])
@@ -348,8 +363,20 @@ def _process_file(filepath, output, options):
     tu = index.parse(filepath, args=options.arguments,
                      options=clang.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD|clang.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)
 
-    root_cursor = tu.cursor
+    diagnostics = tu.diagnostics
+    if diagnostics:
+        unfatal_errors = []
+        for diag in diagnostics:
+            if not diag.severity < clang.Diagnostic.Fatal:
+                raise ParserException(filepath, diagnostics)
+            unfatal_errors.append(diag)
+        print(f'WARNING: Non-fatal errors occured while parsing {filepath}', file=sys.stderr)
+        print("This may cause bindings to be generated incorrectly.", file=sys.stderr)
+        for err in unfatal_errors:
+            print(err.format(), file=sys.stderr)
+        sys.stderr.write('\n')
 
+    root_cursor = tu.cursor
     data = _ParseData(dict(), dict())
 
     for child in root_cursor.get_children():
