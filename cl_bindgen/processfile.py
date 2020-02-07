@@ -162,10 +162,10 @@ _cursor_lisp_type_str._builtin_table = {
     # Char types:
     # According to http://clang-developers.42468.n3.nabble.com/CXTypeKind-for-plain-char-td4036902.html,
     # we can ignore signedness for CHAR_U and CHAR_S, but not UCHAR and SCHAR:
-        TypeKind.CHAR_U : ":char",
+    TypeKind.CHAR_U : ":char",
     TypeKind.CHAR_S : ":char",
     TypeKind.SCHAR  : ":signed-char",
-    TypeKind.UCHAR  : "::unsigned-char"
+    TypeKind.UCHAR  : ":unsigned-char"
 }
 
 # There a few typdefs that are known to CFFI that we don't need to manually define:
