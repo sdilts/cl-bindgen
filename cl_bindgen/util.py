@@ -66,6 +66,11 @@ def _arg_batch_files(arguments, options):
     except BatchException as err:
         print(f'Error: {str(err)}.\nExiting')
         exit(errno.EINVAL)
+    except processfile.ParserException as err:
+        print(f'Error encountered while processing file:')
+        print(err.format_errors(), file=sys.stderr)
+        print('\nNo output produced', file=sys.stderr)
+        exit(1)
 
 def _arg_process_files(arguments, options):
     """ Process the files using the given parsed arguments and options """
