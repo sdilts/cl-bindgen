@@ -130,7 +130,7 @@ def dispatch_from_arguments(arguments, options):
 
     parser = _build_parser()
 
-    if not len(arguments) > 1:
+    if not len(arguments) > 0:
         parser.print_help()
         exit(1)
 
