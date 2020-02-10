@@ -53,6 +53,7 @@ class ProcessOptions:
     output: str = field(default_factory=lambda: ":stdout")
     package : str = None
     arguments: list = field(default_factory=lambda: [])
+    force: bool = False
 
     @staticmethod
     def output_file_from_option(option, open_args):
@@ -365,14 +366,14 @@ def _process_file(filepath, output, options):
 
     diagnostics = tu.diagnostics
     if diagnostics:
-        unfatal_errors = []
+        errors = []
         for diag in diagnostics:
-            if not diag.severity < clang.Diagnostic.Fatal:
+            if options.force == False and not diag.severity < clang.Diagnostic.Fatal:
                 raise ParserException(filepath, diagnostics)
-            unfatal_errors.append(diag)
-        print(f'WARNING: Non-fatal errors occured while parsing {filepath}', file=sys.stderr)
+            errors.append(diag)
+        print(f'WARNING: errors occured while parsing {filepath}', file=sys.stderr)
         print("This may cause bindings to be generated incorrectly.", file=sys.stderr)
-        for err in unfatal_errors:
+        for err in errors:
             print(err.format(), file=sys.stderr)
         sys.stderr.write('\n')
 

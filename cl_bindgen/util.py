@@ -38,6 +38,8 @@ def _add_args_to_option(option, args):
         option.arguments.extend(args.arguments)
     if hasattr(args, 'package') and args.package:
         option.package = args.package
+    if args.force:
+        option.force = True
     return option
 
 def _verify_document(document):
@@ -111,6 +113,10 @@ def _build_parser():
                                 dest='arguments',
                                 nargs=argparse.REMAINDER,
                                 help='Consume the rest of the arguments and pass them to libclang')
+    batch_parser.add_argument('-f',
+                              action='store_true',
+                              dest='force',
+                              help='ignore parsing errors')
     batch_parser.set_defaults(func=_arg_batch_files)
 
 
@@ -131,8 +137,12 @@ def _build_parser():
                                 dest='arguments',
                                 nargs=argparse.REMAINDER,
                                 help='Consume the rest of the arguments and pass them to libclang')
-
+    process_parser.add_argument('-f',
+                                action='store_true',
+                                dest='force',
+                                help='ignore parsing errors')
     process_parser.set_defaults(func=_arg_process_files)
+
     return parser
 
 def dispatch_from_arguments(arguments, options):
