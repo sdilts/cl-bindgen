@@ -61,8 +61,8 @@ def process_batch_file(batchfile, options):
         for document in data:
             if not _verify_document(document):
                 raise BatchException(f'Missing fields in batchfile "{batchfile}"')
-            options = _add_dict_to_option(options, document)
-            processfile.process_files(document['files'], options)
+            new_options = _add_dict_to_option(options, document)
+            processfile.process_files(document['files'], new_options)
 
 def _arg_batch_files(arguments, options):
     """ Perform the actions described in batch_files using `options` as the defaults """
