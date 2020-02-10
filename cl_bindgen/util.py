@@ -32,11 +32,11 @@ def _add_dict_to_option(option, dictionary):
 def _add_args_to_option(option, args):
     """ Return a new option object with the options specified by `args` and based on 'option' """
     option = copy.copy(option)
-    if args.output:
+    if hasattr(args, 'output') and args.output:
         option.output = args.output
     if args.arguments:
         option.arguments.extend(args.arguments)
-    if args.package:
+    if hasattr(args, 'package') and args.package:
         option.package = args.package
     return option
 
@@ -60,6 +60,7 @@ def process_batch_file(batchfile, options):
 def _arg_batch_files(arguments, options):
     """ Perform the actions described in batch_files using `options` as the defaults """
 
+    options = _add_args_to_option(options, arguments)
     try:
         for batch_file in arguments.inputs:
             process_batch_file(batch_file, options)
@@ -106,6 +107,10 @@ def _build_parser():
     batch_parser.add_argument('inputs', nargs='+',
                               metavar='batch files',
                               help="The batch files to process")
+    batch_parser.add_argument('-a', metavar='compiler arguments',
+                                dest='arguments',
+                                nargs=argparse.REMAINDER,
+                                help='Consume the rest of the arguments and pass them to libclang')
     batch_parser.set_defaults(func=_arg_batch_files)
 
 
