@@ -19,12 +19,17 @@ def _add_dict_to_option(option, dictionary):
     output = dictionary.get('output')
     args = dictionary.get('arguments')
     package = dictionary.get('package')
+    force = dictionary.get('force')
     if output:
         option.output = output
     if args:
         options.arguments.extend(args)
     if package:
         option.package = package
+    if force:
+        if not type(force) == type(True):
+            raise BatchException(f"Invalid value in 'force' option: {force.__repr__()}")
+        option.force = force
 
     return option
 

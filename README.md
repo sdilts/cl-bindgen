@@ -58,6 +58,7 @@ Required Fields:
 Optional Fields:
 + `package` : The name of the Common Lisp package of the generated file
 + `arguments` : Arguments to pass to clang
++ `force` : Ignore errors while parsing. Valid values are "True" or "False"
 
 To see example batch files, look in the
 [examples](https://github.com/sdilts/cl-bindgen/tree/master/examples)
