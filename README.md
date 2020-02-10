@@ -63,6 +63,44 @@ To see example batch files, look in the
 [examples](https://github.com/sdilts/cl-bindgen/tree/master/examples)
 directory.
 
+## Handling Include Directories and Clang Arguments
+
+If you need to specify additional command line arguments to the clang
+processor, you can use `-a` option, and list any clang arguments after.
+
+``` bash
+cl-bindgen b batch_file.yaml -a -I include_dir1 -I include_dir2
+# Use -- to stop collecting clang arguments:
+cl-bindgen f -a `pkg-config --cflags mylibrary` -- header.h
+```
+
+If a header file isn't found while processing the input files,
+cl-bindgen will halt and produce no output. This is to avoid producing
+incorrect bindings: while bindings can still be produced when header
+files are missing, they are likely to be incorrect. To ignore missing
+header files and other errors, the `-f` flag can be used:
+
+``` bash
+cl-bindgen b -f batch_file.yaml
+cl-bindgen f -f header.c
+```
+
+### System Include Directories
+
+cl-bindgen doesn't currently know where to find system include
+dirctories. This will cause any file that includes standard headers to
+not be processed without specifying the `-f` option.
+
+To find the system include directory, run the following command, and
+replace `$ANY_C_FILE` with any C file.
+```bash
+clang -### $ANY_C_FILE
+```
+Find `"-resource-dir"` in the produced output. There should be a
+filepath listed right after. For example, `"/usr/lib64/clang/9.0.1/"`.
+Add `include` to the end of the path to get the system include
+directory.
+
 ## Customizing the behavior of cl-bindgen
 cl-bindgen attempts to provide a reasonable interface that is usable
 in most cases. However, if you need to customize how C names are
@@ -97,6 +135,7 @@ fields:
   generated output should be placed in.
 + `arguments` : The command line arguments that should be given to the
   clang processor.
++ `force` : If true, then ignore errors while parsing the input files.
 
 ### The `mangler` Module
 
