@@ -18,12 +18,17 @@ cl-bindgen requires `libclang`, which is not installed with the other Python
 dependencies and not available on PyPi. It is recommended to install it first before installing
 cl-bindgen. Use your distribution's package manager to install it.
 
-From pip:
+Once `libclang` is installed, you can then install `cl-bindgen` from
+source or from PyPI.
+
+From PyPI:
 ``` bash
-pip install --user cl-bindgen
+pip install cl-bindgen
 ```
 From source:
 ``` bash
+git clone --depth=1 https://github.com/sdilts/cl-bindgen
+cd cl-bindgen
 pip install --user .
 ```
 ## Processing individual files
@@ -58,7 +63,7 @@ Required Fields:
 Optional Fields:
 + `package` : The name of the Common Lisp package of the generated file
 + `arguments` : Arguments to pass to clang
-+ `force` : Ignore errors while parsing. Valid values are "True" or "False"
++ `force` : Ignore errors while parsing. Valid values are `True` or `False`
 
 To see example batch files, look in the
 [examples](https://github.com/sdilts/cl-bindgen/tree/master/examples)
@@ -79,7 +84,7 @@ If a header file isn't found while processing the input files,
 cl-bindgen will halt and produce no output. This is to avoid producing
 incorrect bindings: while bindings can still be produced when header
 files are missing, they are likely to be incorrect. To ignore missing
-header files and other errors, the `-f` flag can be used:
+header files and other fatal errors, the `-f` flag can be used:
 
 ``` bash
 cl-bindgen b -f batch_file.yaml
