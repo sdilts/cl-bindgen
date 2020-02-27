@@ -23,7 +23,7 @@ def _add_dict_to_option(option, dictionary):
     if output:
         option.output = output
     if args:
-        options.arguments.extend(args)
+        option.arguments.extend(args)
     if package:
         option.package = package
     if force:
