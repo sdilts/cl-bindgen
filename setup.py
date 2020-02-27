@@ -17,7 +17,7 @@ with open('README.md') as f:
 proj_license = 'MIT'
 
 setup(name="cl_bindgen",
-      version='1.0.3',
+      version='1.1.0',
       description='A command line tool and library for creating Common Lisp language bindings from C header files',
       long_description_content_type='text/markdown',
       long_description=readme,
@@ -25,7 +25,7 @@ setup(name="cl_bindgen",
       author="Stuart Dilts",
       author_email='stuart.dilts@gmail.com',
       url='https://github.com/sdilts/cl-bindgen',
-      download_url='https://github.com/sdilts/cl-bindgen/archive/1.0.3.tar.gz',
+      download_url='https://github.com/sdilts/cl-bindgen/archive/1.1.0.tar.gz',
       packages=['cl_bindgen'],
       entry_points={
           'console_scripts': [
