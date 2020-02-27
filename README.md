@@ -54,7 +54,7 @@ cl-bindgen b my_library.yaml
 ```
 
 ### Batch file format
-Batch files use the YAML format. Mutliple documents can be contained in each input file.
+Batch files use the YAML format. Multiple documents can be contained in each input file.
 
 Required Fields:
 + `output` : where to place the generated code
@@ -94,7 +94,7 @@ cl-bindgen f -f header.c
 ### System Include Directories
 
 cl-bindgen doesn't currently know where to find system include
-dirctories. This will cause any file that includes standard headers to
+directories. This will cause any file that includes standard headers to
 not be processed without specifying the `-f` option.
 
 To find the system include directory, run the following command, and
@@ -103,7 +103,7 @@ replace `$ANY_C_FILE` with any C file.
 clang -### $ANY_C_FILE
 ```
 Find `"-resource-dir"` in the produced output. There should be a
-filepath listed right after. For example, `"/usr/lib64/clang/9.0.1/"`.
+file path listed right after. For example, `"/usr/lib64/clang/9.0.1/"`.
 Add `include` to the end of the path to get the system include
 directory.
 
@@ -147,7 +147,7 @@ fields:
 
 cl-bindgen uses a set of classes called manglers to translate C
 names so that they follow lisp naming conventions. Each mangler class
-provides one or more tranformations to a symbol. For example, the
+provides one or more transformations to a symbol. For example, the
 `UnderscoreMangler` class converts underscores (`_`) into dashes
 (`-`). A series of manglers are applied to each C name to make it
 follow lisp naming conventions.
@@ -160,8 +160,8 @@ Built-in manglers:
 + `UnderscoreMangler` : Converts underscores to dashes.
 + `ConstantMangler` : Converts a string to follow Common Lisp's constant style
   recomendation.
-+ `KeywordMangler` : Adds a `:` to the begining of a string to make it a symbol.
-   Doesn't perfom any action if the string has a package prefix.
++ `KeywordMangler` : Adds a `:` to the beginning of a string to make it a symbol.
+   Doesn't perform any action if the string has a package prefix.
 + `RegexSubMangler` : Substitutes the substring matched by a regex with the given string.
 
 #### Mangler Interface
@@ -169,7 +169,7 @@ Built-in manglers:
 Mangler classes follow a simple interface:
 + `can_mangle(string)`: returns true if the mangler can perform its
   operations on the given string
-+ `mangle(string)`: returns a string with the desired tranformations
++ `mangle(string)`: returns a string with the desired transformations
   applied.
 
 ### The `util` Module
