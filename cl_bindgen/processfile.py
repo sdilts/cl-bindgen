@@ -14,6 +14,7 @@ from clang.cindex import TypeKind, CursorKind
 # so define _output_comment accordingly
 if hasattr(clang.Cursor, 'raw_comment'):
     def _lispify_comment(comment):
+        comment = comment.replace('"', '\\"')
         return comment.replace('*','').replace('/','').strip()
 
     def _output_comment(cursor, output, before='', after=''):
