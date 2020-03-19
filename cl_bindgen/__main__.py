@@ -16,7 +16,7 @@ def main():
     type_manglers = [u_mangler]
     # name manglers are applied to parameters and variables
     name_manglers = [u_mangler]
-    # typdef manglers are applied to typdefs
+    # typedef manglers are applied to typedefs
     typedef_manglers = [u_mangler]
     constant_manglers = [u_mangler, const_mangler]
 

@@ -72,7 +72,7 @@ directory.
 ## Handling Include Directories and Clang Arguments
 
 If you need to specify additional command line arguments to the clang
-processor, you can use `-a` option, and list any clang arguments after.
+processor, you can use the `-a` option, and list any clang arguments after.
 
 ``` bash
 cl-bindgen b batch_file.yaml -a -I include_dir1 -I include_dir2
@@ -153,7 +153,7 @@ provides one or more transformations to a symbol. For example, the
 follow lisp naming conventions.
 
 To maximize customization, a list of manglers is associated with each
-type of name that can be converted. Enums, variable names, typedefs,
+type of name that can be converted. enums, variable names, typedefs,
 constants, and record types all use a different set of manglers.
 
 Built-in manglers:
