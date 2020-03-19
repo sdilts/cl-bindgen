@@ -13,9 +13,13 @@ from clang.cindex import TypeKind, CursorKind
 # the pip version of clang doesn't have the comment functions,
 # so define _output_comment accordingly
 if hasattr(clang.Cursor, 'raw_comment'):
+    import re
+
+    doc_decorator_re = re.compile("^\s*[*/]* ?",flags=re.MULTILINE)
+
     def _lispify_comment(comment):
         comment = comment.replace('"', '\\"')
-        return comment.replace('*','').replace('/','').strip()
+        return re.sub(doc_decorator_re, '', comment).strip()
 
     def _output_comment(cursor, output, before='', after=''):
         comment = cursor.raw_comment
