@@ -35,6 +35,6 @@ def make_gen_fn():
     return gen_fn
 
 tests = [
-    ('simple_struct.h', 'outputs/simple-struct.lisp', {}),
-    ('nested_struct.h', 'outputs/nested-struct.lisp', {})
+    ('inputs/simple_struct.h', 'outputs/simple-struct.lisp', {}),
+    ('inputs/nested_struct.h', 'outputs/nested-struct.lisp', {}),
 ]
