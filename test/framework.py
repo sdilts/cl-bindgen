@@ -122,7 +122,7 @@ def run_tests(test_forms, gen_fn, outdir, outfile):
         else:
             if options[TestOptions.EXPECT_FAIL]:
                 unexpected_pass.append(input_file)
-                # TODO: use different function that explains what happend
+                # TODO: use different function that explains what happened
                 _output_fail_info(input_file, compare_file, output_file, diff, outfile)
 
     _output_stats(len(test_forms), len(failed), len(expected_failed), len(unexpected_pass),
