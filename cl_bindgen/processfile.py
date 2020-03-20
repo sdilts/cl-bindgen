@@ -443,7 +443,9 @@ def process_files(files, options):
 
         actual_output = ProcessOptions.output_file_from_option(options, 'w')
 
-        actual_output.write(output.getvalue())
+        output_text = output.getvalue().rstrip()
+        actual_output.write(output_text)
+        actual_output.write('\n')
     finally:
         output.close()
         if actual_output and not (actual_output == sys.stderr or actual_output == sys.stdout):
