@@ -45,6 +45,8 @@ def _prep_output_dir(outdir):
 _divider_len = 40
 
 def _output_err_title(message, outfile):
+    # TODO: this makes the different error messages start in different places,
+    #       which looks weird
     equal_sign_amount = _divider_len - len(message) - 2
     start_banner = '=' * (equal_sign_amount // 2)
     end_banner = '=' * (equal_sign_amount - len(start_banner))
