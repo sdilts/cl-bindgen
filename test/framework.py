@@ -3,7 +3,9 @@ import filecmp
 import os.path
 import os
 import io
+import traceback
 from enum import Enum
+from dataclasses import dataclass, field
 
 def _perform_diff(result, original):
     """  Compares the files `result` and `original`
@@ -40,23 +42,31 @@ def _prep_output_dir(outdir):
     else:
         os.mkdir(outdir)
 
-def _output_fail_info(input_file, base_file, output_file, diff, outfile):
-    outfile.write("========= TEST FAILED =========\n")
+_divider_len = 40
+
+def _output_err_title(message, outfile):
+    equal_sign_amount = _divider_len - len(message) - 2
+    start_banner = '=' * (equal_sign_amount // 2)
+    end_banner = '=' * (equal_sign_amount - len(start_banner))
+    print(start_banner, message, end_banner, file=outfile)
+
+def _output_err_bar(outfile):
+    print(('=' * _divider_len), file=outfile)
+
+def _output_diff_error(input_file, base_file, output_file, diff, outfile):
+    _output_err_title("TEST FAILED", outfile)
     outfile.write(f"input:   {input_file}\n")
     outfile.write(f"base:    {base_file}\n\n")
     outfile.write(f"result:  {output_file}\n")
     outfile.write(diff)
-    outfile.write("===============================\n\n")
+    _output_err_bar(outfile)
+    outfile.write('\n\n')
 
-def _output_stats(total, failed, expected_fail, unexpected_pass, skipped, outfile):
-    outfile.write("Results:\n")
-    num_okay = total - failed - expected_fail - unexpected_pass - skipped
-    outfile.write(f"  Ok:                    {num_okay}\n")
-    outfile.write(f"  Expected Fail:         {expected_fail}\n")
-    outfile.write(f"  Fail:                  {failed}\n")
-    outfile.write(f"  Unexpected Pass:       {unexpected_pass}\n")
-    outfile.write(f"  Skipped:               {skipped}\n")
-
+def _output_error(input_file, message, reason, outfile):
+    _output_err_title(message, outfile)
+    outfile.write(f"input: {input_file}\n\n")
+    print(reason, '\n', sep='',file=outfile)
+    _output_err_bar(outfile)
 
 class TestOptions(Enum):
     EXPECT_FAIL = 0
@@ -67,6 +77,7 @@ def _get_options(opt_dict):
     options = dict()
     options[TestOptions.EXPECT_FAIL] = opt_dict.get(TestOptions.EXPECT_FAIL, False)
     options[TestOptions.SKIP] = opt_dict.get(TestOptions.SKIP, False)
+    options[TestOptions.THROWS_EXCEPTION] = opt_dict.get(TestOptions.THROWS_EXCEPTION, False)
     return options
 
 def _make_path_list(path):
@@ -94,46 +105,83 @@ def _mangle_input_file(filename):
     mangled_name.write(base_name)
     return mangled_name.getvalue()
 
+@dataclass
+class TestStats:
+    failed: list = field(default_factory=lambda: [])
+    expected_fail: list = field(default_factory=lambda: [])
+    unexpected_pass: list = field(default_factory=lambda: [])
+    skipped: list = field(default_factory=lambda: [])
+
+    @staticmethod
+    def print_stats(total, stat_object, outfile):
+        failed = len(stat_object.failed)
+        expected_fail = len(stat_object.expected_fail)
+        unexpected_pass = len(stat_object.unexpected_pass)
+        skipped = len(stat_object.skipped)
+        outfile.write("Results:\n")
+        num_okay = total - failed - expected_fail - unexpected_pass - skipped
+        outfile.write(f"  Ok:                    {num_okay}\n")
+        outfile.write(f"  Expected Fail:         {expected_fail}\n")
+        outfile.write(f"  Fail:                  {failed}\n")
+        outfile.write(f"  Unexpected Pass:       {unexpected_pass}\n")
+        outfile.write(f"  Skipped:               {skipped}\n")
+
+    @staticmethod
+    def was_succes(stat_object):
+        return len(stat_object.failed) == 0 and len(stat_object.unexpected_pass) == 0
+
+
+def _perform_test(form, gen_fn, stat_object, outdir, outfile):
+    input_file, compare_file, opts = form
+
+    output_file = os.path.join(outdir, _mangle_input_file(input_file))
+
+    options = _get_options(opts)
+
+    if options[TestOptions.SKIP]:
+        stat_object.skipped.append(input_file)
+        return
+    should_continue = True
+    try:
+        gen_fn(input_file, output_file)
+    except Exception as err:
+        if options[TestOptions.EXPECT_FAIL]:
+            stat_object.expected_fail.append(input_file)
+        elif not options[TestOptions.THROWS_EXCEPTION]:
+            stat_object.failed.append(input_file)
+            stream = io.StringIO()
+            stream.write("Exception thrown during file generation:\n")
+            traceback.print_exc(file=stream)
+            _output_error(input_file, "TEST FAILED",
+                          stream.getvalue().rstrip(),
+                          outfile)
+        should_continue = False
+    if not should_continue:
+        return
+
+    is_same, diff = _perform_diff(output_file, compare_file)
+
+    if not is_same:
+        if options[TestOptions.EXPECT_FAIL]:
+            stat_object.expected_fail.append(input_file)
+        else:
+            stat_object.failed.append(input_file)
+            _output_diff_error(input_file, compare_file, output_file, diff, outfile)
+    else:
+        if options[TestOptions.EXPECT_FAIL]:
+            stat_object.unexpected_pass.append(input_file)
+            _output_error(input_file, "UNEXPECTED PASS",
+                          "The test unexpectedly passed", outfile)
+
+
 def run_tests(test_forms, gen_fn, outdir, outfile):
     _prep_output_dir(outdir)
 
-    failed = []
-    expected_failed = []
-    unexpected_pass = []
-    skipped = []
+    stats = TestStats()
 
-    for (input_file, compare_file, opts) in test_forms:
-        output_file = os.path.join(outdir, _mangle_input_file(input_file))
+    for form in test_forms:
+        _perform_test(form, gen_fn, stats, outdir, outfile)
 
-        options = _get_options(opts)
+    TestStats.print_stats(len(test_forms), stats, outfile)
 
-        if options[TestOptions.SKIP]:
-            skipped.append(input_file)
-            continue
-        try:
-            gen_fn(input_file, output_file)
-        except:
-            if not options[TestOptions.THROWS_EXCEPTION]:
-                failed.append(input_file)
-                # TODO: use different function that explains what happened
-                _output_fail_info(input_file, compare_file, output_file, diff, outfile)
-            else:
-                continue
-
-        is_same, diff = _perform_diff(output_file, compare_file)
-
-        if not is_same:
-            if options[TestOptions.EXPECT_FAIL]:
-                expected_failed.append(input_file)
-            else:
-                failed.append(input_file)
-                _output_fail_info(input_file, compare_file, output_file, diff, outfile)
-        else:
-            if options[TestOptions.EXPECT_FAIL]:
-                unexpected_pass.append(input_file)
-                # TODO: use different function that explains what happened
-                _output_fail_info(input_file, compare_file, output_file, diff, outfile)
-
-    _output_stats(len(test_forms), len(failed), len(expected_failed), len(unexpected_pass),
-                  len(skipped), outfile)
-    return len(failed) + len(unexpected_pass) == 0
+    return TestStats.was_succes(stats)
