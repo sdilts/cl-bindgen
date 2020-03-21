@@ -60,7 +60,6 @@ def _output_diff_error(input_file, base_file, output_file, diff, outfile):
     outfile.write(f"result:  {output_file}\n")
     outfile.write(diff)
     _output_err_bar(outfile)
-    outfile.write('\n\n')
 
 def _output_error(input_file, message, reason, outfile):
     _output_err_title(message, outfile)
