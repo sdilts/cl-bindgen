@@ -61,6 +61,7 @@ def _output_stats(total, failed, expected_fail, unexpected_pass, skipped, outfil
 class TestOptions(Enum):
     EXPECT_FAIL = 0
     SKIP = 1
+    THROWS_EXCEPTION = 2
 
 def _get_options(opt_dict):
     options = dict()
@@ -109,7 +110,15 @@ def run_tests(test_forms, gen_fn, outdir, outfile):
         if options[TestOptions.SKIP]:
             skipped.append(input_file)
             continue
-        gen_fn(input_file, output_file)
+        try:
+            gen_fn(input_file, output_file)
+        except:
+            if not options[TestOptions.THROWS_EXCEPTION]:
+                failed.append(input_file)
+                # TODO: use different function that explains what happened
+                _output_fail_info(input_file, compare_file, output_file, diff, outfile)
+            else:
+                continue
 
         is_same, diff = _perform_diff(output_file, compare_file)
 
