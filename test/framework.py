@@ -160,6 +160,12 @@ def _perform_test(form, gen_fn, stat_object, outdir, outfile):
     if not should_continue:
         return
 
+    if not os.path.exists(output_file):
+        _output_error(input_file, "TEST FAILED",
+                      f"File {output_file} wasn't produced.",
+                      outfile)
+        return
+
     is_same, diff = _perform_diff(output_file, compare_file)
 
     if not is_same:
