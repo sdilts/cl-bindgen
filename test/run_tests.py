@@ -41,8 +41,6 @@ tests = [
     ('inputs/simple_struct.h', 'outputs/simple-struct.lisp', {}),
     ('inputs/nested_struct.h', 'outputs/nested-struct.lisp', {}),
     ('inputs/function_pointer.h', 'outputs/function-pointer.lisp', {}),
-    ('inputs/comments.h', 'outputs/comments.lisp', {TestOptions.SKIP: True}),
-    ('inputs/anon_nested_struct.h', 'outputs/anon-nested-struct.lisp', {TestOptions.SKIP: True})
 ]
 
 def test_file_generation():
