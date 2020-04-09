@@ -1,4 +1,5 @@
 import framework
+from framework import TestOptions
 import os
 import shutil
 
@@ -39,12 +40,14 @@ def make_gen_fn():
 tests = [
     ('inputs/simple_struct.h', 'outputs/simple-struct.lisp', {}),
     ('inputs/nested_struct.h', 'outputs/nested-struct.lisp', {}),
+    ('inputs/function_pointer.h', 'outputs/function-pointer.lisp', {}),
+    ('inputs/comments.h', 'outputs/comments.lisp', {TestOptions.SKIP: True}),
+    ('inputs/anon_nested_struct.h', 'outputs/anon-nested-struct.lisp', {TestOptions.SKIP: True})
 ]
 
 def test_file_generation():
     cur_dir = os.getcwd()
     file_dir = os.path.dirname(os.path.realpath(__file__))
-    print("Switching current directory to", file_dir)
     os.chdir(file_dir)
 
     output_dir = ".output"
