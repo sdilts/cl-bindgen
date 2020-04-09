@@ -112,13 +112,15 @@ def _cursor_lisp_type_str(type_obj, options):
         if known_type:
             return known_type
         else:
-            # assume that the typedef name is precded by ":":
             return _mangle_string(type_decl_str, options.typedef_manglers)
     elif kind == TypeKind.POINTER:
         # emit the type of pointer:
         pointee_type = type_obj.get_pointee()
-        type_str = "(:pointer " + _cursor_lisp_type_str(pointee_type, options) + ")"
-        return type_str
+        if pointee_type.kind == TypeKind.FUNCTIONNOPROTO or pointee_type.kind == TypeKind.FUNCTIONPROTO:
+            return f":pointer #| function ptr {pointee_type.spelling} |#"
+        else:
+            type_str = "(:pointer " + _cursor_lisp_type_str(pointee_type, options) + ")"
+            return type_str
     elif kind == TypeKind.ELABORATED:
         # Either a struct, union, or enum: (any type that looks like "struct foo", "enum foo", etc
         named_type = type_obj.get_named_type()
@@ -142,8 +144,8 @@ def _cursor_lisp_type_str(type_obj, options):
         num_elems = type_obj.element_count
         type_str = _cursor_lisp_type_str(elem_type, options)
         return f"(:pointer {type_str} :count {num_elems})\n"
-    elif kind == TypeKind.FUNCTIONPROTO:
-        return f":pointer ; function ptr {type_obj.spelling}\n"
+    elif kind == TypeKind.FUNCTIONPROTO or kind == TypeKind.FUNCTIONNOPROTO:
+        raise Exception("Don't know what to do here!")
     elif kind == TypeKind.ENUM:
         return ":int ; " + _mangle_string(type_obj.spelling, options.type_manglers) + "\n"
 
