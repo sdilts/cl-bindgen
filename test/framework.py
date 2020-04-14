@@ -161,6 +161,7 @@ def _perform_test(form, gen_fn, stat_object, outdir, outfile):
         return
 
     if not os.path.exists(output_file):
+        stat_object.failed.append(input_file)
         _output_error(input_file, "TEST FAILED",
                       f"File {output_file} wasn't produced.",
                       outfile)
