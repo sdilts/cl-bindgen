@@ -97,15 +97,12 @@ cl-bindgen doesn't currently know where to find system include
 directories. This will cause any file that includes standard headers to
 not be processed without specifying the `-f` option.
 
-To find the system include directory, run the following command, and
-replace `$ANY_C_FILE` with any C file.
+To find the system include directory, run the following command:
 ```bash
-clang -### $ANY_C_FILE
+clang -print-resource-dir
 ```
-Find `"-resource-dir"` in the produced output. There should be a
-file path listed right after. For example, `"/usr/lib64/clang/9.0.1/"`.
-Add `include` to the end of the path to get the system include
-directory.
+Add `include` to the end of the path printed path to get the system include
+directory. See issue #4 for doing this lookup automaticaly.
 
 ## Customizing the behavior of cl-bindgen
 cl-bindgen attempts to provide a reasonable interface that is usable
