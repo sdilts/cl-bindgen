@@ -91,19 +91,6 @@ cl-bindgen b -f batch_file.yaml
 cl-bindgen f -f header.c
 ```
 
-### System Include Directories
-
-cl-bindgen doesn't currently know where to find system include
-directories. This will cause any file that includes standard headers to
-not be processed without specifying the `-f` option.
-
-To find the system include directory, run the following command:
-```bash
-clang -print-resource-dir
-```
-Add `include` to the end of the path printed path to get the system include
-directory. See issue #4 for doing this lookup automaticaly.
-
 ## Customizing the behavior of cl-bindgen
 cl-bindgen attempts to provide a reasonable interface that is usable
 in most cases. However, if you need to customize how C names are

@@ -4,6 +4,9 @@ import io
 import copy
 import yaml
 import errno
+import subprocess
+import shutil
+import os.path
 
 import cl_bindgen.processfile as processfile
 from cl_bindgen.processfile import ProcessOptions
@@ -150,6 +153,26 @@ def _build_parser():
 
     return parser
 
+def find_clang_resource_dir():
+    if executable := shutil.which('clang'):
+        result = subprocess.run([executable, '--print-resource-dir'], capture_output=True)
+        path = result.stdout.strip().decode()
+        inc_path = os.path.join(path, "include")
+        # probably don't need the sanity check, but it might prevent some problems
+        if os.path.exists(inc_path):
+            return inc_path
+    return None;
+
+def add_clang_dir(parsed_args):
+    if clang_inc_dir := find_clang_resource_dir():
+        clang_args = parsed_args.arguments
+        if not clang_args:
+            clang_args = []
+            parsed_args.arguments = clang_args
+        clang_args.append('-I' + clang_inc_dir)
+    else:
+        print('WARNING: Could not find clang include directory. It must be manually added as a clang argument', file=sys.stderr)
+
 def dispatch_from_arguments(arguments, options):
     """ Use the given arguments and manglers to perform the main task of cl-bindgen """
 
@@ -160,5 +183,7 @@ def dispatch_from_arguments(arguments, options):
         exit(1)
 
     args = parser.parse_args(arguments)
+
+    add_clang_dir(args)
 
     return args.func(args, options)
