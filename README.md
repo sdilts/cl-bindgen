@@ -1,7 +1,7 @@
 # cl-bindgen
 
 A command line tool and library for creating Common Lisp language bindings
-from C header files
+from C header files.
 
 Features:
 + Generates CFFI bindings for function declarations, enums, variables, unions,
