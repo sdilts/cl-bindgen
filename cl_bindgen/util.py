@@ -16,13 +16,24 @@ class BatchException(Exception):
     def __init__(self, error_string):
         Exception.__init__(self, error_string)
 
-def _add_dict_to_option(option, dictionary):
+def _process_pkg_config(pkg_names, arg_list):
+    if executable := shutil.which('pkg-config'):
+        result = subprocess.run([executable, '--cflags'] + pkg_names, capture_output=True)
+        if not result.returncode == 0:
+            raise BatchException(f"pkg-config command failed: {result.stderr}")
+        include_dirs = result.stdout.strip().decode().split(' ')
+        arg_list.extend(include_dirs)
+
+    print(pkg_names, arg_list)
+
+def _process_batch_options(option, dictionary):
     option = copy.copy(option)
 
     output = dictionary.get('output')
     args = dictionary.get('arguments')
     package = dictionary.get('package')
     force = dictionary.get('force')
+    pkg_config = dictionary.get('pkg-config')
     if output:
         option.output = output
     if args:
@@ -33,6 +44,8 @@ def _add_dict_to_option(option, dictionary):
         if not type(force) == type(True):
             raise BatchException(f"Invalid value in 'force' option: {force.__repr__()}")
         option.force = force
+    if pkg_config:
+        _process_pkg_config(pkg_config, option.arguments)
 
     return option
 
@@ -64,7 +77,7 @@ def process_batch_file(batchfile, options):
         for document in data:
             if not _verify_document(document):
                 raise BatchException(f'Missing fields in batchfile "{batchfile}"')
-            new_options = _add_dict_to_option(options, document)
+            new_options = _process_batch_options(options, document)
             processfile.process_files(document['files'], new_options)
 
 def _arg_batch_files(arguments, options):

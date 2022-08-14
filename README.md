@@ -64,6 +64,10 @@ Optional Fields:
 + `package` : The name of the Common Lisp package of the generated file
 + `arguments` : Arguments to pass to clang
 + `force` : Ignore errors while parsing. Valid values are `True` or `False`
++ `pkg-config`: A list of package names needed by the library. Adds
+  the flags needed to compile the given header files as told by
+  `pkg-config --cflags`
+
 
 To see example batch files, look in the
 [examples](https://github.com/sdilts/cl-bindgen/tree/master/examples)
@@ -77,6 +81,8 @@ processor, you can use the `-a` option, and list any clang arguments after.
 ``` bash
 cl-bindgen b batch_file.yaml -a -I include_dir1 -I include_dir2
 # Use -- to stop collecting clang arguments:
+# Note that instead of directly calling pkg-config when using a batch
+# file, you can use the pkg-config option instead.
 cl-bindgen f -a `pkg-config --cflags mylibrary` -- header.h
 ```
 

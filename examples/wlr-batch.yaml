@@ -1,6 +1,8 @@
 output: wlroots-types.lisp
 package: wlr
 force: True
+pkg-config:
+  - wlroots
 files:
   - /usr/local/include/wlr/types/wlr_box.h
   - /usr/local/include/wlr/types/wlr_cursor.h
