@@ -186,6 +186,12 @@ _cursor_lisp_type_str._known_typedefs = {
     "int32_t" : ":int32",
     "int16_t" : ":int16",
     "int8_t"  : ":int8",
+    "size_t"  : ":size",
+    "ssize_t" : ":ssize",
+    "uintptr_t" : ":uintptr",
+    "intptr_t" : ":intptr",
+    "ptrdiff_t" : ":ptrdiff",
+    "offset_t" : ":offset"
 }
 
 def _process_macro_def(cursor, data, output, options):
