@@ -173,6 +173,12 @@ The `util` module provides two functions: `process_batch_file` and
   command line arguments to perform the actions of cl-bindgen using
   `options` as the default options.
 
+### The `macro_util` Module
+
+This module provides the `macro_match_file_path` function that is used
+by default to check if a macro is a header guard, and the
+`convert_literal_token` that converts literal tokens into CL literals.
+
 ### Examples
 
 The best example of how to use cl-bindgen as a library is to look at its main

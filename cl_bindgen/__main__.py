@@ -1,6 +1,7 @@
 import sys
 
 from cl_bindgen.processfile import ProcessOptions
+from cl_bindgen.macro_util import macro_matches_file_path
 import cl_bindgen.mangler as mangler
 import cl_bindgen.util as util
 
@@ -24,7 +25,8 @@ def main():
                              enum_manglers=enum_manglers,
                              type_manglers=type_manglers,
                              name_manglers=name_manglers,
-                             constant_manglers=constant_manglers)
+                             constant_manglers=constant_manglers,
+                             macro_detector=macro_matches_file_path)
     util.dispatch_from_arguments(sys.argv[1:], options)
 
 if __name__ == "__main__":

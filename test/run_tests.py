@@ -6,6 +6,7 @@ import shutil
 import cl_bindgen.mangler as mangler
 from cl_bindgen.processfile import ProcessOptions, process_file
 import cl_bindgen.util as util
+from cl_bindgen.macro_util import macro_matches_file_path
 
 def make_default_options():
     u_mangler =  mangler.UnderscoreMangler()
@@ -27,7 +28,8 @@ def make_default_options():
                              enum_manglers=enum_manglers,
                              type_manglers=type_manglers,
                              name_manglers=name_manglers,
-                             constant_manglers=constant_manglers)
+                             constant_manglers=constant_manglers,
+                             macro_detector=macro_matches_file_path)
     return options
 
 def make_gen_fn():
@@ -41,6 +43,9 @@ tests = [
     ('inputs/simple_struct.h', 'outputs/simple-struct.lisp', {}),
     ('inputs/nested_struct.h', 'outputs/nested-struct.lisp', {}),
     ('inputs/function_pointer.h', 'outputs/function-pointer.lisp', {}),
+    ('inputs/macro_constant.h', 'outputs/macro_constant.lisp', {}),
+    ('inputs/header_guard.h', 'outputs/header_guard.lisp', {}),
+    ('inputs/header_guard_path.h', 'outputs/header_guard_path.lisp', {})
 ]
 
 def test_file_generation():

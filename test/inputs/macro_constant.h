@@ -1,0 +1,2 @@
+#define SOME_CONSTANT_NUMBER 1
+#define SOME_CONSTANT_STRING "asdf"
