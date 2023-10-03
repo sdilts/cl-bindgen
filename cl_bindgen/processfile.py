@@ -199,12 +199,12 @@ _cursor_lisp_type_str._known_typedefs = {
     "offset_t" : ":offset"
 }
 
-def _output_unknown_macro_def(cursor, output):
+def _output_unknown_macro_def(spelling, cursor, output):
     location = cursor.location
-    print(f"WARNING: Could not transform macro {cursor.spelling} at: {location.file}:{location.line}:{location.column}\n",
+    print(f"WARNING: Could not transform macro {cursor.spelling} at: {location.file}:{location.line}:{location.column}",
           file=sys.stderr)
     output.write("#| MACRO_DEFINITION\n")
-    output.write(f"(defconstant {cursor.spelling} ACTUAL_VALUE_HERE)\n")
+    output.write(f"(defconstant {spelling} ACTUAL_VALUE_HERE)\n")
     output.write("|#\n\n")
 
 def _process_macro_def(cursor, data, output, options):
@@ -212,19 +212,19 @@ def _process_macro_def(cursor, data, output, options):
     # first token is always the macro name, so we can skip it.
     tokens = [i for i in itertools.islice(cursor.get_tokens(), 1, 3)]
     if len(tokens) > 1:
-        _output_unknown_macro_def(cursor, output)
+        _output_unknown_macro_def(spelling, cursor, output)
     elif len(tokens) == 1:
         if tokens[0].kind.name == 'LITERAL':
             try:
                 cl_literal = macro_util.convert_literal_token(tokens[0])
                 output.write(f"(defconstant {spelling} {cl_literal})\n\n")
             except macro_util.LiteralConversionError as e:
-                print(f"Could not convert C literal `{token.spelling}` to CL literal", file=sys.stderr)
-                _output_unknown_macro_def(cursor, output)
+                print(f"Could not convert C literal `{tokens[0].spelling}` to CL literal", file=sys.stderr)
+                _output_unknown_macro_def(spelling, cursor, output)
         else:
-            _output_unkown_macro_def(cursor, output)
+            _output_unknown_macro_def(spelling, cursor, output)
     elif not macro_util.is_header_guard(cursor, options.macro_detector):
-        _output_unknown_macro_def(cursor, output)
+        _output_unknown_macro_def(spelling, cursor, output)
 
 def _process_record(name, actual_type, cursor, output, options):
     text_stream = io.StringIO()

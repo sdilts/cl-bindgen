@@ -43,9 +43,10 @@ tests = [
     ('inputs/simple_struct.h', 'outputs/simple-struct.lisp', {}),
     ('inputs/nested_struct.h', 'outputs/nested-struct.lisp', {}),
     ('inputs/function_pointer.h', 'outputs/function-pointer.lisp', {}),
-    ('inputs/macro_constant.h', 'outputs/macro_constant.lisp', {}),
-    ('inputs/header_guard.h', 'outputs/header_guard.lisp', {}),
-    ('inputs/header_guard_path.h', 'outputs/header_guard_path.lisp', {})
+    ('inputs/macro_constant.h', 'outputs/macro-constant.lisp', {}),
+    ('inputs/header_guard.h', 'outputs/header-guard.lisp', {}),
+    ('inputs/header_guard_path.h', 'outputs/header-guard-path.lisp', {}),
+    ('inputs/macro_constant_invalid.h', 'outputs/macro-constant-invalid.lisp', {})
 ]
 
 def test_file_generation():
