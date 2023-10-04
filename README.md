@@ -103,8 +103,8 @@ in most cases. However, if you need to customize how C names are
 converted into lisp names or embed cl-bindgen into another
 application, cl-bindgen is available as a library.
 
-The `cl_bindgen` package is broken up into three modules: the `processfile`,
-`mangler` and `util` modules. The `processfile` module provides the
+The `cl_bindgen` package is broken up into modules: the `processfile`,
+`mangler`, `util` and `macro_util` modules. The `processfile` module provides the
 functions to generate the lisp bindings, the `mangler` module provides
 functions to convert C names into lisp names, and the `util` module
 provides functions to use batch files and cl-bingen's command line
@@ -132,6 +132,8 @@ fields:
 + `arguments` : The command line arguments that should be given to the
   clang processor.
 + `force` : If true, then ignore errors while parsing the input files.
++ `macro_detector`: The [macro detctor function](#the-macro_util-module)
+  used to detect header macros
 
 ### The `mangler` Module
 
@@ -175,9 +177,14 @@ The `util` module provides two functions: `process_batch_file` and
 
 ### The `macro_util` Module
 
-This module provides the `macro_match_file_path` function that is used
+This module provides the `macro_matches_file_path` function that is used
 by default to check if a macro is a header guard, and the
 `convert_literal_token` that converts literal tokens into CL literals.
+
+The `macro_matches_file_path` is a macro detector function. Macro
+detector functions are used to determine if a C macro is a header
+guard. They take two arguments: the location of the file and the name
+of the file as a string.
 
 ### Examples
 
