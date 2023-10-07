@@ -152,6 +152,9 @@ def _perform_test(form, gen_fn, stat_object, outdir, outfile):
             stat_object.failed.append(input_file)
             stream = io.StringIO()
             stream.write("Exception thrown during file generation:\n")
+            if hasattr(err, 'message'):
+                stream.write(str(err.message))
+                stream.write('\n')
             traceback.print_exc(file=stream)
             _output_error(input_file, "TEST FAILED",
                           stream.getvalue().rstrip(),

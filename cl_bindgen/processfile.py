@@ -40,6 +40,7 @@ class ParserException(Exception):
     def __init__(self, filepath, diagnostics):
         self.filepath = filepath
         self.diagnostics = list(diagnostics)
+        self.message = self.format_errors()
 
     def format_errors(self):
         stream = io.StringIO()
@@ -102,6 +103,32 @@ def _determine_elaborated_type(type_obj):
             raise Exception(f"Unknown cursorkind: {type_decl.kind}")
     elif named_type_kind == TypeKind.ENUM:
         return _ElaboratedType.ENUM
+
+def _determine_elaborated_field(field, inner_name, output, options):
+    actual_elaborated_type = _determine_elaborated_type(field.type)
+    if actual_elaborated_type == _ElaboratedType.ENUM:
+        decl = field.type.get_declaration()
+        _process_enum_as_constants(decl, output, options)
+        return ":int"
+    elif actual_elaborated_type == _ElaboratedType.UNION:
+        _process_record(inner_name, actual_elaborated_type, field, output, options)
+        return "(:union " + inner_name + ")"
+    elif actual_elaborated_type == _ElaboratedType.STRUCT:
+        # struct type
+        _process_record(inner_name, actual_elaborated_type, field, output, options)
+        return "(:struct " + inner_name + ")"
+
+def _determine_decl_field(field, inner_name, output, options):
+    cursor_decl = field.type.get_declaration()
+    cursor_kind = cursor_decl.kind
+    if cursor_kind == CursorKind.UNION_DECL:
+        _process_record(inner_name, _ElaboratedType.UNION, field, output, options)
+        return "(:union " + inner_name + ")"
+    elif cursor_kind == CursorKind.STRUCT_DECL:
+        _process_record(inner_name, _ElaboratedType.UNION, field, output, options)
+        return "(:struct " + inner_name + ")"
+    else:
+        raise Exception(f"Unknown cursor kind {cursor_kind} when realizing field type")
 
 def _cursor_lisp_type_str(type_obj, options):
     assert(type(type_obj) == clang.Type)
@@ -236,23 +263,20 @@ def _process_record(name, actual_type, cursor, output, options):
     _output_comment(cursor, text_stream, before='\n',after='')
     this_type = cursor.type
 
+    anon_count = 0
     for field in this_type.get_fields():
         field_name = _mangle_string(field.spelling.lower(), options.name_manglers)
+        if field_name == '':
+            field_name = 'anon-' + str(anon_count)
+            anon_count = anon_count + 1
         if field.is_anonymous():
-            assert(field.type.kind == clang.TypeKind.ELABORATED)
             inner_name = name + '-' + field_name
-            actual_elaborated_type = _determine_elaborated_type(field.type)
-            if actual_elaborated_type == _ElaboratedType.ENUM:
-                decl = field.type.get_declaration()
-                _process_enum_as_constants(decl, output, options)
-                field_type = ":int"
-            elif actual_elaborated_type == _ElaboratedType.UNION:
-                _process_record(inner_name, actual_elaborated_type, field, output, options)
-                field_type =  "(:union " + name + '-' + field_name + ")"
+            if field.type.kind == clang.TypeKind.ELABORATED:
+                field_type = _determine_elaborated_field(field, inner_name, output, options)
+            elif field.type.kind == clang.TypeKind.RECORD:
+                field_type = _determine_decl_field(field, inner_name, output, options)
             else:
-                # struct type
-                _process_record(inner_name, actual_elaborated_type, field, output, options)
-                field_type = "(:struct " + name + '-' + field_name + ")"
+                raise Exception("Uknown typekind: " + str(field.type.kind))
         else:
             field_type = _cursor_lisp_type_str(field.type, options)
         text_stream.write(f"\n  ({field_name} {field_type})")
