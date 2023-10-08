@@ -60,6 +60,7 @@ class ProcessOptions:
     constant_manglers: list = field(default_factory=lambda: [])
 
     macro_detector: typing.Callable[[str,str,], bool] = field(default_factory=lambda: lambda s, n: False)
+    expand_pointer_p: typing.Callable[[str], bool] = field(default_factory=lambda: lambda s: True)
 
     output: str = field(default_factory=lambda: ":stdout")
     package : str = None
@@ -130,6 +131,10 @@ def _determine_decl_field(field, inner_name, output, options):
     else:
         raise Exception(f"Unknown cursor kind {cursor_kind} when realizing field type")
 
+def _should_expand_pointer_type(pointee_type):
+    return (pointee_type.kind in _cursor_lisp_type_str._builtin_table
+            or options.expand_pointer_p(pointee_type.spelling))
+
 def _cursor_lisp_type_str(type_obj, options):
     assert(type(type_obj) == clang.Type)
     kind = type_obj.kind
@@ -151,8 +156,12 @@ def _cursor_lisp_type_str(type_obj, options):
         if pointee_type.kind == TypeKind.FUNCTIONNOPROTO or pointee_type.kind == TypeKind.FUNCTIONPROTO:
             return f":pointer #| function ptr {pointee_type.spelling} |#"
         else:
-            type_str = "(:pointer " + _cursor_lisp_type_str(pointee_type, options) + ")"
-            return type_str
+            pointee_type_str = _cursor_lisp_type_str(pointee_type, options)
+            if _should_expand_pointer_type(pointee_type):
+                type_str = "(:pointer " + pointee_type_str + ")"
+                return type_str
+            else:
+                return f':pointer #| {pointee_type_str} |# '
     elif kind == TypeKind.ELABORATED:
         # Either a struct, union, or enum: (any type that looks like "struct foo", "enum foo", etc
         named_type = type_obj.get_named_type()

@@ -47,7 +47,8 @@ tests = [
     ('inputs/header_guard.h', 'outputs/header-guard.lisp', {}),
     ('inputs/header_guard_path.h', 'outputs/header-guard-path.lisp', {}),
     ('inputs/macro_constant_invalid.h', 'outputs/macro-constant-invalid.lisp', {}),
-    ('inputs/nested_anonymous_records.h', 'outputs/nested-anonymous-records.lisp', {})
+    ('inputs/nested_anonymous_records.h', 'outputs/nested-anonymous-records.lisp', {}),
+    ('inputs/builtin_pointers.h', 'outputs/builtin-pointers.lisp', {})
 ]
 
 def test_file_generation():

@@ -134,6 +134,9 @@ fields:
 + `force` : If true, then ignore errors while parsing the input files.
 + `macro_detector`: The [macro detctor function](#the-macro_util-module)
   used to detect header macros
++ `expand_pointer_p`: A function that takes a typename and returns
+  whether or not pointers of this type should be fully expanded or
+  left as `:pointer`.
 
 ### The `mangler` Module
 
