@@ -59,7 +59,7 @@ class ProcessOptions:
     name_manglers: list = field(default_factory=lambda: [])
     constant_manglers: list = field(default_factory=lambda: [])
 
-    macro_detector: typing.Callable[[str,str,], bool] = field(default_factory=lambda: False)
+    macro_detector: typing.Callable[[str,str,], bool] = field(default_factory=lambda: lambda s, n: False)
 
     output: str = field(default_factory=lambda: ":stdout")
     package : str = None
