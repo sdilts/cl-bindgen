@@ -131,7 +131,7 @@ def _determine_decl_field(field, inner_name, output, options):
     else:
         raise Exception(f"Unknown cursor kind {cursor_kind} when realizing field type")
 
-def _should_expand_pointer_type(pointee_type):
+def _should_expand_pointer_type(pointee_type, options):
     return (pointee_type.kind in _cursor_lisp_type_str._builtin_table
             or options.expand_pointer_p(pointee_type.spelling))
 
@@ -157,7 +157,7 @@ def _cursor_lisp_type_str(type_obj, options):
             return f":pointer #| function ptr {pointee_type.spelling} |#"
         else:
             pointee_type_str = _cursor_lisp_type_str(pointee_type, options)
-            if _should_expand_pointer_type(pointee_type):
+            if _should_expand_pointer_type(pointee_type, options):
                 type_str = "(:pointer " + pointee_type_str + ")"
                 return type_str
             else:
