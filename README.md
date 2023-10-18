@@ -67,6 +67,8 @@ Optional Fields:
 + `pkg-config`: A list of package names needed by the library. Adds
   the flags needed to compile the given header files as told by
   `pkg-config --cflags`
++ `pointer_expansion` (experimental): Used to provide either a regex
+	or a list of pointer types to expand or not expand in the output.
 
 
 To see example batch files, look in the

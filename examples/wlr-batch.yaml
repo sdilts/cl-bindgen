@@ -3,11 +3,24 @@ package: wlr
 force: True
 pkg-config:
   - wlroots
+arguments:
+  - "-DWLR_USE_UNSTABLE"
 files:
-  - /usr/local/include/wlr/types/wlr_box.h
+  - /usr/local/include/wlr/util/box.h
   - /usr/local/include/wlr/types/wlr_cursor.h
+pointer-expansion:
+  # only include wlr_box type and any types matching wlr_cursor.*":
+  include:
+    types:
+      - wlr_box
+    match: "wlr_cursor.*"
 ---
 output: wlroots-other.lisp
 package: wlr
 files:
   - /usr/local/include/wlr/backend.h
+pointer-expansion:
+  exclude:
+    types:
+      - wlr_backend
+    match: "wlr_.*"

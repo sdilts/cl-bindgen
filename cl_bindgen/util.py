@@ -10,6 +10,7 @@ import os.path
 
 import cl_bindgen.processfile as processfile
 from cl_bindgen.processfile import ProcessOptions
+from cl_bindgen.pointer_expansion import process_pointer_expansion_rules
 
 class BatchException(Exception):
 
@@ -34,6 +35,9 @@ def _process_batch_options(option, dictionary):
     package = dictionary.get('package')
     force = dictionary.get('force')
     pkg_config = dictionary.get('pkg-config')
+    ptr_handling = dictionary.get('pointer-expansion')
+    if ptr_handling:
+        option.expand_pointer_p = process_pointer_expansion_rules(ptr_handling)
     if output:
         option.output = output
     if args:
