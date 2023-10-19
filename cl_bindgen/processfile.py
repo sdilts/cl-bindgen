@@ -135,6 +135,16 @@ def _should_expand_pointer_type(pointee_type, options):
     return (pointee_type.kind in _cursor_lisp_type_str._builtin_table
             or options.expand_pointer_p(pointee_type.spelling))
 
+def _cursor_typedef_str(type_obj, options):
+    type_decl = type_obj.get_declaration()
+    # try the known typedefs:
+    type_decl_str = type_decl.type.spelling
+    known_type = _cursor_lisp_type_str._known_typedefs.get(type_decl_str)
+    if known_type:
+        return known_type
+    else:
+        return _mangle_string(type_decl_str, options.typedef_manglers)
+
 def _cursor_lisp_type_str(type_obj, options):
     assert(type(type_obj) == clang.Type)
     kind = type_obj.kind
@@ -142,14 +152,7 @@ def _cursor_lisp_type_str(type_obj, options):
     if known_type:
         return known_type
     elif kind == TypeKind.TYPEDEF:
-        type_decl = type_obj.get_declaration()
-        # try the known typedefs:
-        type_decl_str = type_decl.type.spelling
-        known_type = _cursor_lisp_type_str._known_typedefs.get(type_decl_str)
-        if known_type:
-            return known_type
-        else:
-            return _mangle_string(type_decl_str, options.typedef_manglers)
+        return _cursor_typedef_str(type_obj, options)
     elif kind == TypeKind.POINTER:
         # emit the type of pointer:
         pointee_type = type_obj.get_pointee()
@@ -177,6 +180,8 @@ def _cursor_lisp_type_str(type_obj, options):
                 raise Exception("Unknown cursorkind")
         elif named_type_kind == TypeKind.ENUM:
             return ":int ; " + _mangle_string(named_type.spelling, options.type_manglers) + "\n"
+        elif named_type_kind == TypeKind.TYPEDEF:
+            return _cursor_typedef_str(type_obj, options)
     elif kind == TypeKind.INCOMPLETEARRAY:
         elem_type = type_obj.element_type
         return "(:pointer " + _cursor_lisp_type_str(elem_type, options) + ") ; array \n"
