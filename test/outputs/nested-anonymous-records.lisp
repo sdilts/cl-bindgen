@@ -1,4 +1,4 @@
-;; next section imported from file test/inputs/nested_anonymous_records.h
+;; next section imported from file inputs/nested_anonymous_records.h
 
 (cffi:defcunion nested-union-anon-0
   (a :int)
