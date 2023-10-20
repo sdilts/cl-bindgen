@@ -49,7 +49,8 @@ tests = [
     ('inputs/macro_constant_invalid.h', 'outputs/macro-constant-invalid.lisp', {}),
     ('inputs/nested_anonymous_records.h', 'outputs/nested-anonymous-records.lisp', {}),
     ('inputs/builtin_pointers.h', 'outputs/builtin-pointers.lisp', {}),
-    ('inputs/typedef.h', 'outputs/typedef.lisp', {})
+    ('inputs/typedef.h', 'outputs/typedef.lisp', {}),
+    ('inputs/constant_array_in_struct.h', 'outputs/constant-array-in-struct.lisp', {}),
 ]
 
 def test_file_generation():

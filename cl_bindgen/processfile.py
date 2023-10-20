@@ -189,7 +189,7 @@ def _cursor_lisp_type_str(type_obj, options):
         elem_type = type_obj.element_type
         num_elems = type_obj.element_count
         type_str = _cursor_lisp_type_str(elem_type, options)
-        return f"(:pointer {type_str} :count {num_elems})\n"
+        return f"{type_str} :count {num_elems}"
     elif kind == TypeKind.FUNCTIONPROTO or kind == TypeKind.FUNCTIONNOPROTO:
         raise Exception("Don't know what to do here!")
     elif kind == TypeKind.ENUM:
