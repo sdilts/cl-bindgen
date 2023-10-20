@@ -179,12 +179,12 @@ def _cursor_lisp_type_str(type_obj, options):
             else:
                 raise Exception("Unknown cursorkind")
         elif named_type_kind == TypeKind.ENUM:
-            return ":int ; " + _mangle_string(named_type.spelling, options.type_manglers) + "\n"
+            return f":int #| {_mangle_string(named_type.spelling, options.type_manglers)} |#"
         elif named_type_kind == TypeKind.TYPEDEF:
             return _cursor_typedef_str(type_obj, options)
     elif kind == TypeKind.INCOMPLETEARRAY:
         elem_type = type_obj.element_type
-        return "(:pointer " + _cursor_lisp_type_str(elem_type, options) + ") ; array \n"
+        return f"(:pointer {_cursor_lisp_type_str(elem_type, options)} #| array |#)"
     elif kind == TypeKind.CONSTANTARRAY:
         elem_type = type_obj.element_type
         num_elems = type_obj.element_count
@@ -193,7 +193,7 @@ def _cursor_lisp_type_str(type_obj, options):
     elif kind == TypeKind.FUNCTIONPROTO or kind == TypeKind.FUNCTIONNOPROTO:
         raise Exception("Don't know what to do here!")
     elif kind == TypeKind.ENUM:
-        return ":int ; " + _mangle_string(type_obj.spelling, options.type_manglers) + "\n"
+        return f":int #| {_mangle_string(type_obj.spelling, options.type_manglers)} |# "
 
     raise Exception(f"Don't know how to handle type: {type_obj.spelling} {kind}")
 
