@@ -270,16 +270,8 @@ def _process_macro_def(cursor, data, output, options):
     elif not macro_util.is_header_guard(cursor, options.macro_detector):
         _output_unknown_macro_def(spelling, cursor, output)
 
-def _process_record(name, actual_type, cursor, output, options):
-    text_stream = io.StringIO()
-    if actual_type == _ElaboratedType.UNION:
-        text_stream.write(f"(cffi:defcunion {name}")
-    else:
-        text_stream.write(f"(cffi:defcstruct {name}")
-
-    _output_comment(cursor, text_stream, before='\n',after='')
+def _extract_record_fields(name, cursor, text_stream, output, options):
     this_type = cursor.type
-
     anon_count = 0
     for field in this_type.get_fields():
         field_name = _mangle_string(field.spelling.lower(), options.name_manglers)
@@ -297,6 +289,18 @@ def _process_record(name, actual_type, cursor, output, options):
         else:
             field_type = _cursor_lisp_type_str(field.type, options)
         text_stream.write(f"\n  ({field_name} {field_type})")
+
+def _process_record(name, actual_type, cursor, output, options):
+    text_stream = io.StringIO()
+    if actual_type == _ElaboratedType.UNION:
+        text_stream.write(f"(cffi:defcunion {name}")
+    else:
+        text_stream.write(f"(cffi:defcstruct {name}")
+
+    _output_comment(cursor, text_stream, before='\n',after='')
+    if cursor.is_definition():
+        _extract_record_fields(name, cursor,text_stream, output, options)
+
     text_stream.write(")\n\n")
     output.write(text_stream.getvalue())
     text_stream.close()
