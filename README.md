@@ -200,6 +200,7 @@ of the file as a string.
 
 The best example of how to use cl-bindgen as a library is to look at its main
 function found in
-[cl\_bindgen/\_\_main\_\_.py](https://github.com/sdilts/cl-bindgen/blob/master/cl_bindgen/__main__.py).
-In it, cl-bindgen's default options are set, then passed to `dispatch_from_arguments`
-to run the utility.
+[cl\_bindgen/\_\_main\_\_.py](https://github.com/sdilts/cl-bindgen/blob/master/cl_bindgen/__main__.py)
+and the
+[cl\_bindgen/util.py](https://github.com/sdilts/cl-bindgen/blob/master/cl_bindgen/util.py)
+file, specifically the `build_default_options` function.
