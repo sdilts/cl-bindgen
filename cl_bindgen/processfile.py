@@ -264,7 +264,7 @@ def _output_unknown_macro_def(spelling, cursor, output):
     output.write("|#\n\n")
 
 def _process_macro_def(cursor, data, output, options):
-    spelling = _mangle_string(cursor.spelling.lower(), options.constant_manglers)
+    spelling = _mangle_string(cursor.spelling, options.constant_manglers)
     # first token is always the macro name, so we can skip it.
     tokens = [i for i in itertools.islice(cursor.get_tokens(), 1, 3)]
     if len(tokens) > 1:
@@ -286,7 +286,7 @@ def _extract_record_fields(name, cursor, text_stream, output, options):
     this_type = cursor.type
     anon_count = 0
     for field in this_type.get_fields():
-        field_name = _mangle_string(field.spelling.lower(), options.name_manglers)
+        field_name = _mangle_string(field.spelling, options.name_manglers)
         if _is_anonymous_record_decl(field):
             field_name = 'anon-' + str(anon_count)
             anon_count = anon_count + 1
@@ -320,7 +320,7 @@ def _process_record(name, actual_type, cursor, output, options):
 def _process_struct_decl(cursor, data, output, options):
     name = cursor.spelling
     if name:
-        mangled_name = _mangle_string(name.lower(), options.type_manglers)
+        mangled_name = _mangle_string(name, options.type_manglers)
         _process_record(mangled_name, _ElaboratedType.STRUCT, cursor, output, options)
     else:
         data.skipped_records[cursor.hash] = (_ElaboratedType.STRUCT, cursor)
@@ -328,7 +328,7 @@ def _process_struct_decl(cursor, data, output, options):
 def _process_union_decl(cursor, data, output, options):
     name = cursor.spelling
     if name:
-        mangled_name = _mangle_string(name.lower(), options.type_manglers)
+        mangled_name = _mangle_string(name, options.type_manglers)
         _process_record(mangled_name, _ElaboratedType.UNION, cursor, output, options)
     else:
         data.skipped_records[cursor.hash] = (_ElaboratedType.UNION, cursor)
@@ -337,27 +337,27 @@ def _process_realized_enum(name, cursor, output, options):
     output.write(f"(cffi:defcenum {name}")
     _output_comment(cursor, output, before='\n',after='')
     for field in cursor.get_children():
-        name = _mangle_string(field.spelling.lower(), options.enum_manglers)
+        name = _mangle_string(field.spelling, options.enum_manglers)
 
         output.write(f"\n  ({name} {field.enum_value})")
     output.write(")\n\n")
 
 def _process_enum_as_constants(cursor, output, options):
     for field in cursor.get_children():
-        field_name = _mangle_string(field.spelling.lower(), options.constant_manglers)
+        field_name = _mangle_string(field.spelling, options.constant_manglers)
         output.write(f"(defconstant {field_name} {field.enum_value})\n")
     output.write("\n")
 
 def _process_enum_decl(cursor, data, output, options):
     name = cursor.spelling
     if name:
-        name = _mangle_string(name.lower(), options.type_manglers)
+        name = _mangle_string(name, options.type_manglers)
         _process_realized_enum(name, cursor, output, options)
     else:
         data.skipped_enums[cursor.hash] = cursor
 
 def _process_func_decl(cursor, data, output, options):
-    name = cursor.spelling.lower()
+    name = cursor.spelling
     # mangle function names the same way as typenames:
     mangled_name = _mangle_string(name, options.type_manglers)
 
@@ -378,7 +378,7 @@ def _process_func_decl(cursor, data, output, options):
         if arg_name == "" or arg_name == None:
             arg_name = "unknown"
         else:
-            arg_name = arg.spelling.lower()
+            arg_name = arg.spelling
 
         arg_type_name = _cursor_lisp_type_str(arg.type, options)
         arg_mangled_name = _mangle_string(arg_name, options.name_manglers)
@@ -414,12 +414,12 @@ def _expand_skipped_type(name, s_type, data, output, options):
 
 
 def _process_typedef_decl(cursor, data, output, options):
-    name = cursor.spelling.lower()
+    name = cursor.spelling
     underlying_type = cursor.underlying_typedef_type
     base_type_name = _expand_skipped_type(name, underlying_type, data, output, options)
     if not base_type_name:
         base_type_name = _cursor_lisp_type_str(underlying_type, options)
-    mangled_name = _mangle_string(cursor.spelling.lower(),
+    mangled_name = _mangle_string(cursor.spelling,
                                                      options.typedef_manglers)
     output.write(f"(cffi:defctype {mangled_name} {base_type_name})\n\n")
 
@@ -427,7 +427,7 @@ def _no_op(cursor, data, output, options):
     pass
 
 def _process_var_decl(cursor, data, output, options):
-    name = cursor.spelling.lower()
+    name = cursor.spelling
     underlying_type = cursor.type
     base_type_name = _expand_skipped_type(name, underlying_type, data, output, options)
     if not base_type_name:
