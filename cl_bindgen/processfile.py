@@ -237,7 +237,10 @@ _cursor_lisp_type_str._known_typedefs = {
     "uintptr_t" : ":uintptr",
     "intptr_t" : ":intptr",
     "ptrdiff_t" : ":ptrdiff",
-    "offset_t" : ":offset"
+    # This one seems to be POSIX, and while it doesn't
+    # seem to be outputted correctly, keep it here for
+    # documentation.
+    "off_t" : ":offset"
 }
 
 def _output_unknown_macro_def(spelling, cursor, output):

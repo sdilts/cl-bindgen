@@ -179,6 +179,11 @@ The `util` module provides two functions: `process_batch_file` and
 + `dispatch_from_arguments(arguments, options)` : Uses the provided
   command line arguments to perform the actions of cl-bindgen using
   `options` as the default options.
++ `find_clang_resource_dir()` : This is needed if you build your own
+  `ProcessOptions` object and do not use the `dispatch_from_arguments`
+  function. The path returned by this function needs to be appended
+  to the clang arguments in order for the script to find built-in
+  headers. See the `add_clang_dir` function in this module.
 
 ### The `macro_util` Module
 

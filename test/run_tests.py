@@ -10,6 +10,11 @@ from cl_bindgen.macro_util import macro_matches_file_path
 
 def make_gen_fn():
     options = util.build_default_options()
+    if clang_dir := util.find_clang_resource_dir():
+        options.arguments.append('-I' + clang_dir)
+    else:
+        print('WARNING: Could not find clang include directory. It must be manually added as a clang argument', file=sys.stderr)
+
     def gen_fn(inputfile, outputfile):
         options.output = outputfile
         process_file(inputfile, options)
@@ -27,6 +32,7 @@ tests = [
     ('inputs/builtin_pointers.h', 'outputs/builtin-pointers.lisp', {}),
     ('inputs/typedef.h', 'outputs/typedef.lisp', {}),
     ('inputs/constant_array_in_struct.h', 'outputs/constant-array-in-struct.lisp', {}),
+    ('inputs/standard_types.h', 'outputs/standard_types.lisp', {})
 ]
 
 def test_file_generation():
