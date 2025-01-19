@@ -2,6 +2,7 @@ import framework
 from framework import TestOptions
 import os
 import shutil
+import sys
 
 import cl_bindgen.mangler as mangler
 from cl_bindgen.processfile import ProcessOptions, process_file
