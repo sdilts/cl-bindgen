@@ -13,7 +13,9 @@ pointer-expansion:
   include:
     types:
       - wlr_box
-    match: "wlr_cursor.*"
+    match:
+      - "wlr_cursor.*"
+      - "wlr_input.*"
 ---
 output: wlroots-other.lisp
 package: wlr
