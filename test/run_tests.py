@@ -32,7 +32,8 @@ tests = [
     ('inputs/builtin_pointers.h', 'outputs/builtin-pointers.lisp', {}),
     ('inputs/typedef.h', 'outputs/typedef.lisp', {}),
     ('inputs/constant_array_in_struct.h', 'outputs/constant-array-in-struct.lisp', {}),
-    ('inputs/standard_types.h', 'outputs/standard_types.lisp', {})
+    ('inputs/standard_types.h', 'outputs/standard_types.lisp', {}),
+    ('inputs/forward_declaration.h', 'outputs/forward_declaration.lisp', {})
 ]
 
 def test_file_generation():
