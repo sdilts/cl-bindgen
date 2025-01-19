@@ -7,6 +7,9 @@ import errno
 import subprocess
 import shutil
 import os.path
+import re
+
+import clang.cindex as clang
 
 import cl_bindgen.processfile as processfile
 from cl_bindgen.pointer_expansion import process_pointer_expansion_rules
@@ -195,8 +198,24 @@ def _build_parser():
 
     return parser
 
+def _guess_clang_version():
+    matcher = re.compile('libclang-([0-9]+).*.so')
+    found = matcher.search(clang.conf.get_filename())
+    if found:
+        return found.group(1)
+    else:
+        return None
+
 def find_clang_resource_dir():
-    if executable := shutil.which('clang'):
+    if version := _guess_clang_version():
+        exec_name = 'clang-' + version
+    else:
+        exec_name = 'clang'
+        print((
+              "WARNING: could not determine clang version. System header files\n"
+              "   may not be processed correctly."), file=sys.stderr)
+
+    if executable := shutil.which(exec_name):
         result = subprocess.run([executable, '--print-resource-dir'], capture_output=True)
         path = result.stdout.strip().decode()
         inc_path = os.path.join(path, "include")
