@@ -11,6 +11,7 @@ Each mangler class follows the following interface:
 """
 
 import re
+import io
 
 class PrefixMangler:
     """ Mangler to replace the prefix of a string wtih a given string."""
@@ -60,14 +61,15 @@ class ConstantMangler:
         if ':' in string:
             # Remove any possible package prefix and save it:
             (pkg_prefix, colon, symb) = string.rpartition(':')
-            return pkg_prefix + ':+' + symb + '+'
+            result = pkg_prefix + ':+' + symb + '+'
         else:
-            return "+" + string + "+"
+            result = "+" + string + "+"
+        return result.lower()
 
 class UnderscoreMangler:
     """ Converts underscores to dashes"""
 
-    def __init(self):
+    def __init__(self):
         pass
 
     def can_mangle(self, string):
@@ -92,3 +94,26 @@ class RegexSubMangler:
 
     def mangle(self, string):
         return re.sub(self.regex, self.replace, string)
+
+class CamelCaseConverter:
+    """" Convert camelCase and TitleCase to common lisp case.
+
+    Doesn't seperate consecutive capitilzations into spaces, i.e.
+    IString gets converted into istring, ThingDNE gets converted
+    to thing-dne
+    """
+    def __init__(self):
+        pass
+
+    def can_mangle(self, string):
+        return len(string) > 0
+
+    def mangle(self, string):
+        builder = io.StringIO()
+        builder.write(string[0].lower())
+        for i in range(1, len(string)):
+            cur_char = string[i]
+            if cur_char.isupper() and not string[i-1].isupper():
+                builder.write('-')
+            builder.write(cur_char.lower())
+        return builder.getvalue()
