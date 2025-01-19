@@ -7,6 +7,7 @@ Features:
 + Generates CFFI bindings for function declarations, enums, variables, unions,
   and structures.
 + Handles nested and anonymous structures, unions, and enums.
+  (See [#15](https://github.com/sdilts/cl-bindgen/pull/15))
 + Warns when it cannot produce a correct binding.
 + Documentation comments from the C source files are lispified and
   included with the generated bindings when available.
@@ -129,7 +130,7 @@ fields:
 + `output` : The path of the file where the output is
   placed. `":stdout"` or `":stderr"` can be specified to use standard
   out or standard error.
-+ `package` : If not `None`, this specifies the package the the
++ `package` : If not `None`, this specifies the package the
   generated output should be placed in.
 + `arguments` : The command line arguments that should be given to the
   clang processor.
@@ -159,7 +160,10 @@ Built-in manglers:
   recomendation.
 + `KeywordMangler` : Adds a `:` to the beginning of a string to make it a symbol.
    Doesn't perform any action if the string has a package prefix.
-+ `RegexSubMangler` : Substitutes the substring matched by a regex with the given string.
++ `RegexSubMangler` : Substitutes the substring matched by a regex
+  with the given string.
++ `CamelCaseConverter` : Convert TitleCase and camelCase strings to
+  lisp-case strings that are all lower case.
 
 #### Mangler Interface
 
@@ -171,8 +175,8 @@ Mangler classes follow a simple interface:
 
 ### The `util` Module
 
-The `util` module provides two functions: `process_batch_file` and
-`dispatch_from_arguments`.
+The `util` module provides functions for using batch files and
+composing objects together, processing arguments, etc.
 
 + `process_batch_file(batch_file, options)` : Processes the given
   batch file using `options` as the default options.
