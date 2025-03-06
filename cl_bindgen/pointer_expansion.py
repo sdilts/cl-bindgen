@@ -41,14 +41,14 @@ def make_batch_determiner(whitelist=None, blacklist=None, include_matcher=None, 
         # import everything but the blacklist
         if exclude_matcher:
             excluder = _compile_regexes(exclude_matcher)
-            return lambda typename: typename not in black_set and not match_regex_list(excluder, typename)
+            return lambda typename: typename not in black_set and not _match_regex_list(excluder, typename)
         else:
             return lambda typename: typename not in black_set
     elif has_whitelist and not blacklist:
         # only import the whitelist
         if include_matcher:
             includer = _compile_regexes(include_matcher)
-            return lambda typename: typename in white_set or match_regex_list(includer, typename)
+            return lambda typename: typename in white_set or _match_regex_list(includer, typename)
         else:
             return lambda x: x in white_set
     elif has_whitelist and has_blacklist:
@@ -57,15 +57,15 @@ def make_batch_determiner(whitelist=None, blacklist=None, include_matcher=None, 
             excluder = _compile_regexes(exclude_matcher)
             includer = _compile_regexes(include_matcher)
             def fn(typename):
-                in_white = (typename in white_set or match_regex_list(includer, typename))
-                not_black = (typename not in black_set and not match_regex_list(excluder, typename))
+                in_white = (typename in white_set or _match_regex_list(includer, typename))
+                not_black = (typename not in black_set and not _match_regex_list(excluder, typename))
                 return in_white and not_black
         elif exclude_matcher is not None:
             excluder = _compile_regexes(exclude_matcher)
-            return lambda x: x in white_set and not match_regex_list(excluder, x) and x not in black_set
+            return lambda x: x in white_set and not _match_regex_list(excluder, x) and x not in black_set
         elif include_matcher:
             includer = _compile_regexes(include_matcher)
-            return lambda x: (x in  white_set or match_regex_list(includer, x)) and x not in black_set
+            return lambda x: (x in  white_set or _match_regex_list(includer, x)) and x not in black_set
         else:
             return lambda x: typename in white_set and typename not in black_set
     else:
