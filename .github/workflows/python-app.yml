@@ -25,9 +25,9 @@ jobs:
         python-version: "3.13"
     - name: Install dependencies
       run: |
+        sudo apt-get install -y libclang-20-dev python3-clang
         python -m pip install --upgrade pip
         pip install .
-        sudo apt-get install -y libclang-20-dev
     - name: Run Tests
       run: |
         python test/run_tests.py
