@@ -25,8 +25,10 @@ jobs:
         python-version: "3.13"
     - name: Install dependencies
       run: |
-        sudo apt-get install -y libclang-20-dev python3-clang
+        sudo apt-get install -y llvm-defaults
         python -m pip install --upgrade pip
+    - name: Install package
+      run: |
         pip install .
     - name: Run Tests
       run: |
