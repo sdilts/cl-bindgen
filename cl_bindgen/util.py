@@ -64,8 +64,11 @@ def _process_batch_options(option, dictionary):
     force = dictionary.get('force')
     pkg_config = dictionary.get('pkg-config')
     ptr_handling = dictionary.get('pointer-expansion')
+    inline_handling = dictionary.get('make-inline')
     if ptr_handling:
         option.expand_pointer_p = process_pointer_expansion_rules(ptr_handling)
+    if inline_handling:
+        option.declaim_inline_p = process_pointer_expansion_rules(inline_handling)
     if output:
         option.output = output
     if args:

@@ -70,6 +70,9 @@ Optional Fields:
   `pkg-config --cflags`
 + `pointer_expansion` (experimental): Used to provide either a regex
 	or a list of pointer types to expand or not expand in the output.
++ `make-inline` (experimental): Used to provide either a regex
+	or a list of names matching functions that should be declared
+	`inline`. Uses the same yml keys as `ponter-expansion`.
 
 
 To see example batch files, look in the

@@ -73,6 +73,7 @@ class ProcessOptions:
 
     macro_detector: typing.Callable[[str,str,], bool] = field(default_factory=lambda: lambda s, n: False)
     expand_pointer_p: typing.Callable[[str], bool] = field(default_factory=lambda: lambda s: True)
+    declaim_inline_p: typing.Callable[[str], bool] = field(default_factory=lambda: lambda s: False)
 
     output: str = field(default_factory=lambda: ":stdout")
     package : str = None
@@ -363,6 +364,9 @@ def _process_func_decl(cursor, data, output, options):
 
     ret_type = cursor.result_type
     lisp_ret_type = _cursor_lisp_type_str(ret_type, options)
+
+    if options.declaim_inline_p(name):
+        output.write(f'(declaim (inline {mangled_name}))\n')
 
     output.write("(cffi:defcfun ")
     if name != mangled_name:
