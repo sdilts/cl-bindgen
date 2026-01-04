@@ -40,10 +40,12 @@ if hasattr(clang.Cursor, 'is_anonymous_record_decl'):
     # This function was added in the llvm-project commit fbcf3cb7fe95d9d420b643ce379f7ee2106a6efc
     # Which will be released in version 20? It's a simple definition though,
     # so you can copy it into your cindex.py file and it should work.
-    print("Has anon record decl", file=sys.stderr)
     def _is_anonymous_record_decl(cursor):
         return cursor.is_anonymous_record_decl()
 else:
+    print("WARNING: the version of libclang being used doesn't",
+          "provide a way to detect anonymous records.",
+          sep='\n  ')
     def _is_anonymous_record_decl(cursor):
         # This won't work on some versions of libclang (particularlly libclang 17),
         # as this spelling isn't empty, and is instead something like "(anonymous at ...)"
