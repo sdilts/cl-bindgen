@@ -206,9 +206,7 @@ def _cursor_lisp_type_str(type_obj, options, location=None):
         type_str = _cursor_lisp_type_str(elem_type, options, location)
         return f"{type_str} :count {num_elems}"
     elif kind == TypeKind.FUNCTIONPROTO:
-        # print(f"WARNING: encountered function prototype at {location.file}:{location.line}:{location.column}; this may not be generated correctly",
-        #       file=sys.stderr)
-        # return f":void #| {type_obj.spelling} |#"
+        return f":void #| {type_obj.spelling} |#"
         raise ProcessingError("Don't know how to handle type kind FUNCTIONPROTO", location)
     elif kind == TypeKind.FUNCTIONNOPROTO:
         raise ProcessingError("Don't know how to handle type kind FUNCTIONNOPROTO", location)
