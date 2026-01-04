@@ -1,7 +1,7 @@
 from setuptools import setup
 
 requirements = [
-    'clang',
+    'clang>=19.1.0',
     'PyYAML'
 ]
 
