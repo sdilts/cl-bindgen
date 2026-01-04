@@ -1,6 +1,5 @@
 import argparse
 import sys
-import io
 import copy
 import yaml
 import errno
@@ -76,7 +75,7 @@ def _process_batch_options(option, dictionary):
     if package:
         option.package = package
     if force:
-        if not type(force) == type(True):
+        if not isinstance(force, bool):
             raise BatchException(f"Invalid value in 'force' option: {force.__repr__()}")
         option.force = force
     if pkg_config:
@@ -126,7 +125,7 @@ def _arg_batch_files(arguments, options):
         print(f'Error: {str(err)}.\nExiting')
         exit(errno.EINVAL)
     except processfile.ParserException as err:
-        print(f'Error encountered while processing file:')
+        print('Error encountered while processing file:')
         print(err.format_errors(), file=sys.stderr)
         print('\nNo output produced', file=sys.stderr)
         exit(1)
@@ -146,7 +145,7 @@ def _arg_process_files(arguments, options):
               file=sys.stderr)
         exit(err.errno)
     except processfile.ParserException as err:
-        print(f'Error encountered while processing file:')
+        print('Error encountered while processing file:')
         print(err.format_errors(), file=sys.stderr)
         print('\nNo output produced', file=sys.stderr)
         exit(1)
@@ -225,7 +224,7 @@ def find_clang_resource_dir():
         # probably don't need the sanity check, but it might prevent some problems
         if os.path.exists(inc_path):
             return inc_path
-    return None;
+    return None
 
 def add_clang_dir(parsed_args):
     if clang_inc_dir := find_clang_resource_dir():

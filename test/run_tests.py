@@ -1,13 +1,10 @@
 import framework
-from framework import TestOptions
 import os
 import shutil
 import sys
 
-import cl_bindgen.mangler as mangler
-from cl_bindgen.processfile import ProcessOptions, process_file
+from cl_bindgen.processfile import process_file
 import cl_bindgen.util as util
-from cl_bindgen.macro_util import macro_matches_file_path
 
 def make_gen_fn():
     options = util.build_default_options()

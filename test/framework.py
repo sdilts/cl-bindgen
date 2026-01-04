@@ -91,7 +91,7 @@ def _make_path_list(path):
         rest, part = os.path.split(rest)
         # When at the root dir, rest may just repeat over and over:
         if rest == last:
-            break;
+            break
         last = rest
         lst.append(part)
     lst.reverse()

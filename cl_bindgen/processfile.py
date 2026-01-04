@@ -1,13 +1,13 @@
 import sys
 import os.path
 import errno
-import copy
 import io
 import itertools
 import typing
 import re
 from enum import Enum
-from dataclasses import dataclass, field
+import dataclasses
+from dataclasses import dataclass
 from collections import namedtuple
 import cl_bindgen.macro_util as macro_util
 from cl_bindgen.exception import ProcessingError
@@ -61,19 +61,19 @@ class ParserException(Exception):
 
 @dataclass
 class ProcessOptions:
-    typedef_manglers: list = field(default_factory=lambda: [])
-    enum_manglers: list = field(default_factory=lambda: [])
-    type_manglers: list = field(default_factory=lambda: [])
-    name_manglers: list = field(default_factory=lambda: [])
-    constant_manglers: list = field(default_factory=lambda: [])
+    typedef_manglers: list = dataclasses.field(default_factory=lambda: [])
+    enum_manglers: list = dataclasses.field(default_factory=lambda: [])
+    type_manglers: list = dataclasses.field(default_factory=lambda: [])
+    name_manglers: list = dataclasses.field(default_factory=lambda: [])
+    constant_manglers: list = dataclasses.field(default_factory=lambda: [])
 
-    macro_detector: typing.Callable[[str,str,], bool] = field(default_factory=lambda: lambda s, n: False)
-    expand_pointer_p: typing.Callable[[str], bool] = field(default_factory=lambda: lambda s: True)
-    declaim_inline_p: typing.Callable[[str], bool] = field(default_factory=lambda: lambda s: False)
+    macro_detector: typing.Callable[[str,str,], bool] = dataclasses.field(default_factory=lambda: lambda s, n: False)
+    expand_pointer_p: typing.Callable[[str], bool] = dataclasses.field(default_factory=lambda: lambda s: True)
+    declaim_inline_p: typing.Callable[[str], bool] = dataclasses.field(default_factory=lambda: lambda s: False)
 
-    output: str = field(default_factory=lambda: ":stdout")
+    output: str = dataclasses.field(default_factory=lambda: ":stdout")
     package : str = None
-    arguments: list = field(default_factory=lambda: [])
+    arguments: list = dataclasses.field(default_factory=lambda: [])
     force: bool = False
 
     @staticmethod
@@ -155,7 +155,7 @@ def _cursor_typedef_str(type_obj, options):
         return _mangle_string(type_decl_str, options.typedef_manglers)
 
 def _cursor_lisp_type_str(type_obj, options, location=None):
-    assert(type(type_obj) == clang.Type)
+    assert(isinstance(type_obj, clang.Type))
     kind = type_obj.kind
     known_type = _cursor_lisp_type_str._builtin_table.get(kind)
     if known_type:
@@ -274,7 +274,7 @@ def _process_macro_def(cursor, data, output, options):
             try:
                 cl_literal = macro_util.convert_literal_token(tokens[0])
                 output.write(f"(defconstant {spelling} {cl_literal})\n\n")
-            except macro_util.LiteralConversionError as e:
+            except macro_util.LiteralConversionError:
                 print(f"Could not convert C literal `{tokens[0].spelling}` to CL literal", file=sys.stderr)
                 _output_unknown_macro_def(spelling, cursor, output)
         else:
@@ -379,7 +379,7 @@ def _process_func_decl(cursor, data, output, options):
 
     for arg in cursor.get_arguments():
         arg_name = arg.spelling
-        if arg_name == "" or arg_name == None:
+        if arg_name == "" or arg_name is None:
             arg_name = "unknown"
         else:
             arg_name = arg.spelling
@@ -465,7 +465,7 @@ def _process_file(filepath, output, options):
     if diagnostics:
         errors = []
         for diag in diagnostics:
-            if options.force == False and not diag.severity < clang.Diagnostic.Fatal:
+            if not options.force and not diag.severity < clang.Diagnostic.Fatal:
                 raise ParserException(filepath, diagnostics)
             errors.append(diag)
         print(f'WARNING: errors occured while parsing {filepath}', file=sys.stderr)

@@ -14,16 +14,12 @@ permissions:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
     - name: Install dependencies
       run: |
         sudo apt install -y python3-pip python3-clang-20
-        # python -m pip install --upgrade pip
-        # pip install clang==19.1.7
     - name: Install package
       run: |
         pip install .
@@ -31,13 +27,14 @@ jobs:
     - name: Run Tests
       run: |
         python test/run_tests.py
-    #     if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    # - name: Lint with flake8
-    #   run: |
-    #     # stop the build if there are Python syntax errors or undefined names
-    #     flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-    #     # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-    #     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    # - name: Test with pytest
-    #   run: |
-    #     pytest
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install dependencies
+      run: |
+        sudo apt install -y python3-pip python3-clang-20
+        pip3 install ruff
+    - name: lint
+      run: |
+        ruff check
