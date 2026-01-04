@@ -24,8 +24,8 @@ def process_pointer_expansion_rules(options: dict):
 def _match_regex_list(regex_list, name):
     for r in regex_list:
         if r.search(name):
-            return True;
-    return False;
+            return True
+    return False
 
 def _compile_regexes(regexes):
     return [re.compile(m) for m in regexes]
@@ -67,7 +67,7 @@ def make_batch_determiner(whitelist=None, blacklist=None, include_matcher=None, 
             includer = _compile_regexes(include_matcher)
             return lambda x: (x in  white_set or _match_regex_list(includer, x)) and x not in black_set
         else:
-            return lambda x: typename in white_set and typename not in black_set
+            return lambda x: x in white_set and x not in black_set
     else:
         # import everything
         return lambda x: True

@@ -40,7 +40,7 @@ class KeywordMangler:
     def can_mangle(self, string):
         # if there is already a colon in the name, then
         # common lisp won't accept it, so don't do anything:
-        return not ':' in string
+        return ':' not in string
 
     def mangle(self, string):
         return ':' + string
