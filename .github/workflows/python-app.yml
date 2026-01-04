@@ -15,21 +15,19 @@ permissions:
 jobs:
   build:
 
-    runs-on: fedora-latest
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python 3.13
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.13"
     - name: Install dependencies
       run: |
-        sudo dnf install -y python3-clang
-        python -m pip install --upgrade pip
+        sudo apt install -y python3-pip python3-clang-20
+        # python -m pip install --upgrade pip
+        # pip install clang==19.1.7
     - name: Install package
       run: |
         pip install .
+        pip uninstall -y clang
     - name: Run Tests
       run: |
         python test/run_tests.py
