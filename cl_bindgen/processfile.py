@@ -9,6 +9,7 @@ from enum import Enum
 from dataclasses import dataclass, field
 from collections import namedtuple
 import cl_bindgen.macro_util as macro_util
+from cl_bindgen.exception import ProcessingError
 
 import clang.cindex as clang
 from clang.cindex import TypeKind, CursorKind
@@ -159,7 +160,7 @@ def _cursor_typedef_str(type_obj, options):
     else:
         return _mangle_string(type_decl_str, options.typedef_manglers)
 
-def _cursor_lisp_type_str(type_obj, options):
+def _cursor_lisp_type_str(type_obj, options, location=None):
     assert(type(type_obj) == clang.Type)
     kind = type_obj.kind
     known_type = _cursor_lisp_type_str._builtin_table.get(kind)
@@ -173,7 +174,7 @@ def _cursor_lisp_type_str(type_obj, options):
         if pointee_type.kind == TypeKind.FUNCTIONNOPROTO or pointee_type.kind == TypeKind.FUNCTIONPROTO:
             return f":pointer #| function ptr {pointee_type.spelling} |#"
         else:
-            pointee_type_str = _cursor_lisp_type_str(pointee_type, options)
+            pointee_type_str = _cursor_lisp_type_str(pointee_type, options, location)
             if _should_expand_pointer_type(pointee_type, options):
                 type_str = "(:pointer " + pointee_type_str + ")"
                 return type_str
@@ -191,25 +192,30 @@ def _cursor_lisp_type_str(type_obj, options):
             elif type_decl.kind == CursorKind.STRUCT_DECL:
                 return "(:struct " + mangled_name + ")"
             else:
-                raise Exception("Unknown cursorkind")
+                raise ProcessingError("Unknown cursorkind", location)
         elif named_type_kind == TypeKind.ENUM:
             return f":int #| {_mangle_string(named_type.spelling, options.type_manglers)} |#"
         elif named_type_kind == TypeKind.TYPEDEF:
             return _cursor_typedef_str(type_obj, options)
     elif kind == TypeKind.INCOMPLETEARRAY:
         elem_type = type_obj.element_type
-        return f"(:pointer {_cursor_lisp_type_str(elem_type, options)} #| array |#)"
+        return f"(:pointer {_cursor_lisp_type_str(elem_type, options, location)} #| array |#)"
     elif kind == TypeKind.CONSTANTARRAY:
         elem_type = type_obj.element_type
         num_elems = type_obj.element_count
-        type_str = _cursor_lisp_type_str(elem_type, options)
+        type_str = _cursor_lisp_type_str(elem_type, options, location)
         return f"{type_str} :count {num_elems}"
-    elif kind == TypeKind.FUNCTIONPROTO or kind == TypeKind.FUNCTIONNOPROTO:
-        raise Exception("Don't know what to do here!")
+    elif kind == TypeKind.FUNCTIONPROTO:
+        # print(f"WARNING: encountered function prototype at {location.file}:{location.line}:{location.column}; this may not be generated correctly",
+        #       file=sys.stderr)
+        # return f":void #| {type_obj.spelling} |#"
+        raise ProcessingError("Don't know how to handle type kind FUNCTIONPROTO", location)
+    elif kind == TypeKind.FUNCTIONNOPROTO:
+        raise ProcessingError("Don't know how to handle type kind FUNCTIONNOPROTO", location)
     elif kind == TypeKind.ENUM:
         return f":int #| {_mangle_string(type_obj.spelling, options.type_manglers)} |# "
 
-    raise Exception(f"Don't know how to handle type: {type_obj.spelling} {kind}")
+    raise ProcessingError(f"Don't know how to handle type: {type_obj.spelling} {kind}", location)
 
 # This table contains types that don't have to be inferred or otherwise
 # built based off of the cursor type
@@ -299,9 +305,10 @@ def _extract_record_fields(name, cursor, text_stream, output, options):
             elif field.type.kind == clang.TypeKind.RECORD:
                 field_type = _determine_decl_field(field, inner_name, output, options)
             else:
-                raise Exception("Uknown typekind: " + str(field.type.kind))
+                raise ProcessingError("Uknown typekind: " + str(field.type.kind),
+                                      cursor.location)
         else:
-            field_type = _cursor_lisp_type_str(field.type, options)
+            field_type = _cursor_lisp_type_str(field.type, options, cursor.location)
         text_stream.write(f"\n  ({field_name} {field_type})")
 
 def _process_record(name, actual_type, cursor, output, options):
@@ -364,7 +371,7 @@ def _process_func_decl(cursor, data, output, options):
     mangled_name = _mangle_string(name, options.type_manglers)
 
     ret_type = cursor.result_type
-    lisp_ret_type = _cursor_lisp_type_str(ret_type, options)
+    lisp_ret_type = _cursor_lisp_type_str(ret_type, options, cursor.location)
 
     if options.declaim_inline_p(name):
         output.write(f'(declaim (inline {mangled_name}))\n')
@@ -385,7 +392,7 @@ def _process_func_decl(cursor, data, output, options):
         else:
             arg_name = arg.spelling
 
-        arg_type_name = _cursor_lisp_type_str(arg.type, options)
+        arg_type_name = _cursor_lisp_type_str(arg.type, options, cursor.location)
         arg_mangled_name = _mangle_string(arg_name, options.name_manglers)
 
         output.write(f"\n  ({arg_mangled_name} {arg_type_name})")
@@ -423,7 +430,7 @@ def _process_typedef_decl(cursor, data, output, options):
     underlying_type = cursor.underlying_typedef_type
     base_type_name = _expand_skipped_type(name, underlying_type, data, output, options)
     if not base_type_name:
-        base_type_name = _cursor_lisp_type_str(underlying_type, options)
+        base_type_name = _cursor_lisp_type_str(underlying_type, options, cursor.location)
     mangled_name = _mangle_string(cursor.spelling,
                                                      options.typedef_manglers)
     output.write(f"(cffi:defctype {mangled_name} {base_type_name})\n\n")
@@ -436,7 +443,7 @@ def _process_var_decl(cursor, data, output, options):
     underlying_type = cursor.type
     base_type_name = _expand_skipped_type(name, underlying_type, data, output, options)
     if not base_type_name:
-        base_type_name = _cursor_lisp_type_str(underlying_type, options)
+        base_type_name = _cursor_lisp_type_str(underlying_type, options, cursor.location)
     if underlying_type.is_const_qualified():
         mangled_name = _mangle_string(name, options.constant_manglers)
         output.write(f'(cffi:defcvar ("{cursor.spelling}" {mangled_name} :read-only t) {base_type_name}')
