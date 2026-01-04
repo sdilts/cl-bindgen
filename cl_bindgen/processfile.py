@@ -5,6 +5,7 @@ import copy
 import io
 import itertools
 import typing
+import re
 from enum import Enum
 from dataclasses import dataclass, field
 from collections import namedtuple
@@ -14,27 +15,18 @@ from cl_bindgen.exception import ProcessingError
 import clang.cindex as clang
 from clang.cindex import TypeKind, CursorKind
 
-# the pip version of clang doesn't have the comment functions,
-# so define _output_comment accordingly
-if hasattr(clang.Cursor, 'raw_comment'):
-    import re
+def _lispify_comment(comment):
+    comment = comment.replace('"', '\\"')
+    return re.sub(_lispify_comment.doc_decorator_re, '', comment).strip()
+_lispify_comment.doc_decorator_re = re.compile("^\s*[*/]* ?",flags=re.MULTILINE)
 
-    doc_decorator_re = re.compile("^\s*[*/]* ?",flags=re.MULTILINE)
-
-    def _lispify_comment(comment):
-        comment = comment.replace('"', '\\"')
-        return re.sub(doc_decorator_re, '', comment).strip()
-
-    def _output_comment(cursor, output, before='', after=''):
-        comment = cursor.raw_comment
-        if comment:
-            comment = _lispify_comment(comment)
-            output.write(before)
-            output.write(f'  "{comment}"')
-            output.write(after)
-else:
-    def _output_comment(cursor, output, before='', after=''):
-        pass
+def _output_comment(cursor, output, before='', after=''):
+    comment = cursor.raw_comment
+    if comment:
+        comment = _lispify_comment(comment)
+        output.write(before)
+        output.write(f'  "{comment}"')
+        output.write(after)
 
 if hasattr(clang.Cursor, 'is_anonymous_record_decl'):
     # This function was added in the llvm-project commit fbcf3cb7fe95d9d420b643ce379f7ee2106a6efc
