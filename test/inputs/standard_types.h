@@ -2,6 +2,9 @@
 #include <stddef.h>
 #include <sys/types.h>
 
+/**
+ * A function with a bunch of standard types
+ **/
 int8_t std_int_fn(int16_t foo, int32_t bar, int64_t baz);
 
 uint8_t uint_fn(uint16_t foo, uint32_t bar, uint64_t baz);

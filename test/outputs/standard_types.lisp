@@ -1,6 +1,7 @@
 ;; next section imported from file inputs/standard_types.h
 
 (cffi:defcfun ("std_int_fn" std-int-fn) :int8
+  "A function with a bunch of standard types"
   (foo :int16)
   (bar :int32)
   (baz :int64))
