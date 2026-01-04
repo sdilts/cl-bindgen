@@ -20,6 +20,13 @@ class LiteralConversionError(Exception):
     pass
 
 def convert_literal_token(token):
+    if token.spelling.startswith('0x'):
+        try:
+            val = int(token.spelling, 0)
+            return f'#x{val:x}'
+        except Exception as e:
+            print('could not parse int', token.spelling, e, file = sys.stderr)
+            raise LiteralConversionError()
     if re.fullmatch('"(.*)"|([0-9]*\.{0,1}[0-9]*)', token.spelling):
         return token.spelling
     else:

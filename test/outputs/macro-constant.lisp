@@ -3,3 +3,5 @@
 (defconstant +some-constant-number+ 1)
 
 (defconstant +some-constant-string+ "asdf")
+
+(defconstant +hex-constant+ #x64)

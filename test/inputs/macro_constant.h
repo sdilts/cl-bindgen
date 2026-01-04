@@ -1,2 +1,3 @@
 #define SOME_CONSTANT_NUMBER 1
 #define SOME_CONSTANT_STRING "asdf"
+#define HEX_CONSTANT 0x64
