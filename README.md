@@ -15,23 +15,33 @@ Features:
   lisp symbols.
 
 ## Installation
-cl-bindgen requires `libclang`, which is not installed with the other Python
-dependencies and not available on PyPi. It is recommended to install it first before installing
-cl-bindgen. Use your distribution's package manager to install it.
+cl-bindgen requires `libclang` and its Python bindings, which is not
+installed with the other Python dependencies. The bindings are
+available on pypi, but the installed version needs to match the version
+of clang that is on your system. cl-bindgen is compatible with Clang
+version 20.1 and higher, but will work with some problems on clang 19.1.
+
+It is recommended libclang the correct python bindings first before
+installing cl-bindgen. Use your distribution's package manager to
+install it.
 
 Once `libclang` is installed, you can then install `cl-bindgen` from
-source or from PyPI.
+source:
 
-From PyPI:
-``` bash
-pip install cl-bindgen
-```
-From source:
 ``` bash
 git clone --depth=1 https://github.com/sdilts/cl-bindgen
 cd cl-bindgen
-pip install --user .
+pip install .
 ```
+
+When using pipx (Debian-based systems in particular), make sure that
+the distro installed files are visible by passing in
+`--system-site-packages`:
+
+``` bash
+pipx install --system-site-packages .
+```
+
 ## Processing individual files
 To process individual files, use the `f` command and specify one or
 more files to process. By default, output will be printed to
