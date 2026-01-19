@@ -201,7 +201,6 @@ def _cursor_lisp_type_str(type_obj, options, location=None):
         return f"{type_str} :count {num_elems}"
     elif kind == TypeKind.FUNCTIONPROTO:
         return f":void #| {type_obj.spelling} |#"
-        raise ProcessingError("Don't know how to handle type kind FUNCTIONPROTO", location)
     elif kind == TypeKind.FUNCTIONNOPROTO:
         raise ProcessingError("Don't know how to handle type kind FUNCTIONNOPROTO", location)
     elif kind == TypeKind.ENUM:
