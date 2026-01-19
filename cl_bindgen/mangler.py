@@ -108,12 +108,15 @@ class CamelCaseConverter:
     def can_mangle(self, string):
         return len(string) > 0
 
+    def _should_add_dash(self, cur_char, prev):
+        return cur_char.isupper() and not prev.isupper() and prev.isalnum()
+
     def mangle(self, string):
         builder = io.StringIO()
         builder.write(string[0].lower())
         for i in range(1, len(string)):
             cur_char = string[i]
-            if cur_char.isupper() and not string[i-1].isupper():
+            if self._should_add_dash(cur_char, string[i-1]):
                 builder.write('-')
             builder.write(cur_char.lower())
         return builder.getvalue()
