@@ -24,9 +24,12 @@ jobs:
       run: |
         pip install .
         pip uninstall -y clang
-    - name: Run Tests
+    - name: Run Unit Tests
       run: |
-        python test/run_tests.py
+        python -m unittest
+    - name: Run Integration tests
+      run: |
+        python integrated/run_tests.py
   lint:
     runs-on: ubuntu-latest
     steps:
