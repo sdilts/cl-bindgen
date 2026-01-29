@@ -38,8 +38,8 @@ def _compile_regexes(regexes):
     return [re.compile(m) for m in regexes]
 
 def make_batch_determiner(whitelist=None, blacklist=None, include_matcher=None, exclude_matcher=None):
-    has_whitelist = whitelist is not None or include_matcher is not None
-    has_blacklist = blacklist is not None or exclude_matcher is not None
+    has_whitelist = whitelist or include_matcher is not None
+    has_blacklist = blacklist or exclude_matcher is not None
 
     white_set = set(whitelist)
     black_set = set(blacklist)
@@ -60,21 +60,23 @@ def make_batch_determiner(whitelist=None, blacklist=None, include_matcher=None, 
             return lambda x: x in white_set
     elif has_whitelist and has_blacklist:
         # import everything on whitelist, excluding blacklist
+        allowed_set = white_set.difference(black_set)
         if exclude_matcher and include_matcher:
             excluder = _compile_regexes(exclude_matcher)
             includer = _compile_regexes(include_matcher)
             def fn(typename):
-                in_white = (typename in white_set or _match_regex_list(includer, typename))
-                not_black = (typename not in black_set and not _match_regex_list(excluder, typename))
+                in_white = (typename in allowed_set or _match_regex_list(includer, typename))
+                not_black = (not _match_regex_list(excluder, typename))
                 return in_white and not_black
+            return fn
         elif exclude_matcher is not None:
             excluder = _compile_regexes(exclude_matcher)
-            return lambda x: x in white_set and not _match_regex_list(excluder, x) and x not in black_set
+            return lambda x: x in allowed_set and not _match_regex_list(excluder, x)
         elif include_matcher:
             includer = _compile_regexes(include_matcher)
-            return lambda x: (x in  white_set or _match_regex_list(includer, x)) and x not in black_set
+            return lambda x: x in allowed_set or _match_regex_list(includer, x)
         else:
-            return lambda x: x in white_set and x not in black_set
+            return lambda x: x in allowed_set
     else:
         # import everything
         return lambda x: True
