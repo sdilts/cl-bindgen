@@ -32,7 +32,8 @@ tests = [
     ('inputs/constant_array_in_struct.h', 'outputs/constant-array-in-struct.lisp', {}),
     ('inputs/standard_types.h', 'outputs/standard_types.lisp', {}),
     ('inputs/forward_declaration.h', 'outputs/forward_declaration.lisp', {}),
-    ('inputs/capitalization.h', 'outputs/capitalization.lisp', {})
+    ('inputs/capitalization.h', 'outputs/capitalization.lisp', {}),
+    ('inputs/multiple_forward_decls.h', 'outputs/multiple_forward_decls.lisp', {}),
 ]
 
 def test_file_generation():

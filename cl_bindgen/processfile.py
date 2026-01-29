@@ -8,7 +8,6 @@ import re
 from enum import Enum
 import dataclasses
 from dataclasses import dataclass
-from collections import namedtuple
 import cl_bindgen.macro_util as macro_util
 from cl_bindgen.exception import ProcessingError
 
@@ -92,7 +91,13 @@ class ProcessOptions:
             # TODO: try to do something intellegent here to avoid/warn when overwriting files?
             return open(option.output, open_args)
 
-_ParseData = namedtuple('ParseData', ['skipped_enums', 'skipped_records'])
+# _ParseData = namedtuple('ParseData', ['skipped_enums', 'skipped_records'])
+@dataclass
+class _ParseData:
+    skipped_names: dict = dataclasses.field(default_factory=dict)
+    skipped_records: dict = dataclasses.field(default_factory=dict)
+    skipped_enums: dict = dataclasses.field(default_factory=dict)
+    found_records: set = dataclasses.field(default_factory=set)
 
 class _ElaboratedType(Enum):
     UNION  = 0
@@ -119,28 +124,28 @@ def _determine_elaborated_type(type_obj):
     elif named_type_kind == TypeKind.ENUM:
         return _ElaboratedType.ENUM
 
-def _determine_elaborated_field(field, inner_name, output, options):
+def _determine_elaborated_field(field, inner_name, output, options, found_records):
     actual_elaborated_type = _determine_elaborated_type(field.type)
     if actual_elaborated_type == _ElaboratedType.ENUM:
         decl = field.type.get_declaration()
         _process_enum_as_constants(decl, output, options)
         return ":int"
     elif actual_elaborated_type == _ElaboratedType.UNION:
-        _process_record(inner_name, actual_elaborated_type, field, output, options)
+        _process_record(inner_name, actual_elaborated_type, field, output, options, found_records)
         return "(:union " + inner_name + ")"
     elif actual_elaborated_type == _ElaboratedType.STRUCT:
         # struct type
-        _process_record(inner_name, actual_elaborated_type, field, output, options)
+        _process_record(inner_name, actual_elaborated_type, field, output, options, found_records)
         return "(:struct " + inner_name + ")"
 
-def _determine_decl_field(field, inner_name, output, options):
+def _determine_decl_field(field, inner_name, output, options, found_records):
     cursor_decl = field.type.get_declaration()
     cursor_kind = cursor_decl.kind
     if cursor_kind == CursorKind.UNION_DECL:
-        _process_record(inner_name, _ElaboratedType.UNION, field, output, options)
+        _process_record(inner_name, _ElaboratedType.UNION, field, output, options, found_records)
         return "(:union " + inner_name + ")"
     elif cursor_kind == CursorKind.STRUCT_DECL:
-        _process_record(inner_name, _ElaboratedType.UNION, field, output, options)
+        _process_record(inner_name, _ElaboratedType.UNION, field, output, options, found_records)
         return "(:struct " + inner_name + ")"
     else:
         raise Exception(f"Unknown cursor kind {cursor_kind} when realizing field type")
@@ -286,7 +291,7 @@ def _process_macro_def(cursor, data, output, options):
     elif not macro_util.is_header_guard(cursor, options.macro_detector):
         _output_unknown_macro_def(spelling, cursor, output)
 
-def _extract_record_fields(name, cursor, text_stream, output, options):
+def _extract_record_fields(name, cursor, text_stream, output, options, found_records):
     this_type = cursor.type
     anon_count = 0
     for field in this_type.get_fields():
@@ -297,9 +302,9 @@ def _extract_record_fields(name, cursor, text_stream, output, options):
         if field.is_anonymous():
             inner_name = name + '-' + field_name
             if field.type.kind == clang.TypeKind.ELABORATED:
-                field_type = _determine_elaborated_field(field, inner_name, output, options)
+                field_type = _determine_elaborated_field(field, inner_name, output, options, found_records)
             elif field.type.kind == clang.TypeKind.RECORD:
-                field_type = _determine_decl_field(field, inner_name, output, options)
+                field_type = _determine_decl_field(field, inner_name, output, options, found_records)
             else:
                 raise ProcessingError("Uknown typekind: " + str(field.type.kind),
                                       cursor.location)
@@ -307,7 +312,15 @@ def _extract_record_fields(name, cursor, text_stream, output, options):
             field_type = _cursor_lisp_type_str(field.type, options, cursor.location)
         text_stream.write(f"\n  ({field_name} {field_type})")
 
-def _process_record(name, actual_type, cursor, output, options):
+def _process_record(name, actual_type, cursor, output, options, found_records: set):
+    # If we have seen this type before and there are no fields,
+    # don't output anything:
+    if not cursor.is_definition() and name in found_records:
+        # TODO: Duplicate definitions of structs aren't allowed by the spec.
+	#  maybe we can detect that? As of version 20, clang doesn't give us an error.
+        return
+    found_records.add(name)
+
     text_stream = io.StringIO()
     if actual_type == _ElaboratedType.UNION:
         text_stream.write(f"(cffi:defcunion {name}")
@@ -316,25 +329,27 @@ def _process_record(name, actual_type, cursor, output, options):
 
     _output_comment(cursor, text_stream, before='\n',after='')
     if cursor.is_definition():
-        _extract_record_fields(name, cursor,text_stream, output, options)
+        _extract_record_fields(name, cursor,text_stream, output, options, found_records)
 
     text_stream.write(")\n\n")
     output.write(text_stream.getvalue())
     text_stream.close()
 
-def _process_struct_decl(cursor, data, output, options):
+def _process_struct_decl(cursor, data: _ParseData, output, options):
     name = cursor.spelling
     if name:
         mangled_name = _mangle_string(name, options.type_manglers)
-        _process_record(mangled_name, _ElaboratedType.STRUCT, cursor, output, options)
+        _process_record(mangled_name, _ElaboratedType.STRUCT, cursor, output,
+                        options, data.found_records)
     else:
         data.skipped_records[cursor.hash] = (_ElaboratedType.STRUCT, cursor)
 
-def _process_union_decl(cursor, data, output, options):
+def _process_union_decl(cursor, data: _ParseData, output, options):
     name = cursor.spelling
     if name:
         mangled_name = _mangle_string(name, options.type_manglers)
-        _process_record(mangled_name, _ElaboratedType.UNION, cursor, output, options)
+        _process_record(mangled_name, _ElaboratedType.UNION, cursor, output,
+                        options, data.found_records)
     else:
         data.skipped_records[cursor.hash] = (_ElaboratedType.UNION, cursor)
 
@@ -365,6 +380,7 @@ def _use_string_ret_type(name, ret_type, options):
     kind = ret_type.kind
     if kind == TypeKind.POINTER:
         pointee_type = ret_type.get_pointee()
+
         if pointee_type.kind == TypeKind.CHAR_S or pointee_type.kind == TypeKind.CHAR_U:
             return options.return_str_p(name)
     return False
@@ -466,7 +482,7 @@ def _unrecognized_cursorkind(cursor):
     print(f"WARNING: Not processing {cursor.kind} {location.file}:{location.line}:{location.column}\n",
           file=sys.stderr)
 
-def _process_file(filepath, output, options):
+def _process_file(filepath, output, options, found_records):
     if os.path.isdir(filepath):
         raise IsADirectoryError(errno.EISDIR, filepath)
     elif not os.path.isfile(filepath):
@@ -490,7 +506,7 @@ def _process_file(filepath, output, options):
         sys.stderr.write('\n')
 
     root_cursor = tu.cursor
-    data = _ParseData(dict(), dict())
+    data = _ParseData(found_records=found_records)
 
     for child in root_cursor.get_children():
         location = child.location
@@ -512,6 +528,8 @@ def _process_file(filepath, output, options):
         else:
             sys.stderr.write("WARNING: Skipped unamed union decl at ")
             sys.stderr.write(f"{location.file}:{location.line}:{location.column}\n")
+
+    return data.found_records
 _process_file._visit_table = {
     clang.CursorKind.MACRO_DEFINITION    : _process_macro_def,
     clang.CursorKind.STRUCT_DECL         : _process_struct_decl,
@@ -539,6 +557,7 @@ def process_files(files, options):
 
     output = io.StringIO()
     actual_output = None
+    found_records = set()
 
     if options.package:
         output.write(f'(cl:in-package #:{options.package})\n\n')
@@ -546,7 +565,7 @@ def process_files(files, options):
     try:
         for f in files:
             output.write(f";; next section imported from file {f}\n\n")
-            _process_file(f, output, options)
+            found_records = _process_file(f, output, options, found_records)
 
         actual_output = ProcessOptions.output_file_from_option(options, 'w')
 
