@@ -1,5 +1,4 @@
 import argparse
-import sys
 import copy
 import yaml
 import errno
@@ -11,6 +10,7 @@ import re
 import clang.cindex as clang
 
 import cl_bindgen.processfile as processfile
+import cl_bindgen.logging as logging
 from cl_bindgen.pointer_expansion import process_pointer_expansion_rules
 import cl_bindgen.macro_util as macro_util
 import cl_bindgen.mangler as mangler
@@ -124,13 +124,20 @@ def _arg_batch_files(arguments, options):
     try:
         for batch_file in arguments.inputs:
             process_batch_file(batch_file, options)
+    except FileNotFoundError as err:
+        logging.error(f'Batch file "{err.filename}" not found.\nNo output produced.')
+        exit(err.errno)
+    except IsADirectoryError as err:
+        logging.error(f'"{err.filename}" is a directory.\nNo output produced.')
+        exit(err.errno)
     except BatchException as err:
-        print(f'Error: {str(err)}.\nExiting')
+        logging.error(f'{str(err)}.', 'Exiting.')
         exit(errno.EINVAL)
     except processfile.ParserException as err:
-        print('Error encountered while processing file:')
-        print(err.format_errors(), file=sys.stderr)
-        print('\nNo output produced', file=sys.stderr)
+        logging.error('Problem encountered while processing file:',
+	              err.format_errors(),
+	              'No output produced.',
+	              sep='\n')
         exit(1)
 
 def _arg_process_files(arguments, options):
@@ -140,17 +147,16 @@ def _arg_process_files(arguments, options):
     try:
         processfile.process_files(arguments.inputs, options)
     except FileNotFoundError as err:
-        print(f'Error: Input file "{err.strerror}" not found.\nNo output produced.',
-              file=sys.stderr)
+        logging.error(f'Input file "{err.strerror}" not found.\nNo output produced.')
         exit(err.errno)
     except IsADirectoryError as err:
-        print(f'Error: "{err.strerror}" is a directory.\nNo output produced.',
-              file=sys.stderr)
+        logging.error(f'"{err.strerror}" is a directory.\nNo output produced.')
         exit(err.errno)
     except processfile.ParserException as err:
-        print('Error encountered while processing file:')
-        print(err.format_errors(), file=sys.stderr)
-        print('\nNo output produced', file=sys.stderr)
+        logging.error('Problem encountered while processing file:',
+                      err.format_errors(),
+                      'No output produced.',
+                      sep='\n')
         exit(1)
 
 def _build_parser():
@@ -216,9 +222,8 @@ def find_clang_resource_dir():
         exec_name = 'clang-' + version
     else:
         exec_name = 'clang'
-        print((
-              "WARNING: could not determine clang version. System header files\n"
-              "   may not be processed correctly."), file=sys.stderr)
+        logging.warn("could not determine clang version. System header files",
+                     "may not be processed correctly.")
 
     if executable := shutil.which(exec_name):
         result = subprocess.run([executable, '--print-resource-dir'], capture_output=True)
@@ -237,7 +242,7 @@ def add_clang_dir(parsed_args):
             parsed_args.arguments = clang_args
         clang_args.append('-I' + clang_inc_dir)
     else:
-        print('WARNING: Could not find clang include directory. It must be manually added as a clang argument', file=sys.stderr)
+        logging.warn('Could not find clang include directory. It must be manually added as a clang argument')
 
 def dispatch_from_arguments(arguments, options):
     """ Use the given arguments and manglers to perform the main task of cl-bindgen """

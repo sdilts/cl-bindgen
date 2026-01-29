@@ -9,6 +9,7 @@ from enum import Enum
 import dataclasses
 from dataclasses import dataclass
 import cl_bindgen.macro_util as macro_util
+import cl_bindgen.logging as logging
 from cl_bindgen.exception import ProcessingError
 
 import clang.cindex as clang
@@ -34,9 +35,8 @@ if hasattr(clang.Cursor, 'is_anonymous_record_decl'):
     def _is_anonymous_record_decl(cursor):
         return cursor.is_anonymous_record_decl()
 else:
-    print("WARNING: the version of libclang being used doesn't",
-          "provide a way to detect anonymous records.",
-          sep='\n  ')
+    logging.warn("the version of libclang being used doesn't",
+                 "provide a way to detect anonymous records.")
     def _is_anonymous_record_decl(cursor):
         # This won't work on some versions of libclang (particularlly libclang 17),
         # as this spelling isn't empty, and is instead something like "(anonymous at ...)"
@@ -265,9 +265,7 @@ _cursor_lisp_type_str._known_typedefs = {
 }
 
 def _output_unknown_macro_def(spelling, cursor, output):
-    location = cursor.location
-    print(f"WARNING: Could not transform macro {cursor.spelling} at: {location.file}:{location.line}:{location.column}",
-          file=sys.stderr)
+    logging.warn(f'Could not transform macro {cursor.spelling}', location=cursor.location)
     output.write("#| MACRO_DEFINITION\n")
     output.write(f"(defconstant {spelling} ACTUAL_VALUE_HERE)\n")
     output.write("|#\n\n")
@@ -284,7 +282,7 @@ def _process_macro_def(cursor, data, output, options):
                 cl_literal = macro_util.convert_literal_token(tokens[0])
                 output.write(f"(defconstant {spelling} {cl_literal})\n\n")
             except macro_util.LiteralConversionError:
-                print(f"Could not convert C literal `{tokens[0].spelling}` to CL literal", file=sys.stderr)
+                logging.error(f"Could not convert C literal `{tokens[0].spelling}` to CL literal")
                 _output_unknown_macro_def(spelling, cursor, output)
         else:
             _output_unknown_macro_def(spelling, cursor, output)
@@ -478,9 +476,7 @@ def _process_var_decl(cursor, data, output, options):
 
 
 def _unrecognized_cursorkind(cursor):
-    location = cursor.location
-    print(f"WARNING: Not processing {cursor.kind} {location.file}:{location.line}:{location.column}\n",
-          file=sys.stderr)
+    logging.warn(f'Not processing {cursor.kind}', location=cursor.location, end='\n\n')
 
 def _process_file(filepath, output, options, found_records):
     if os.path.isdir(filepath):
@@ -499,11 +495,11 @@ def _process_file(filepath, output, options, found_records):
             if not options.force and not diag.severity < clang.Diagnostic.Fatal:
                 raise ParserException(filepath, diagnostics)
             errors.append(diag)
-        print(f'WARNING: errors occured while parsing {filepath}', file=sys.stderr)
-        print("This may cause bindings to be generated incorrectly.", file=sys.stderr)
-        for err in errors:
-            print(err.format(), file=sys.stderr)
-        sys.stderr.write('\n')
+        logging.warn(f'WARNING: errors occured while parsing {filepath}.',
+                     "This may cause bindings to be generated incorrectly.",
+                     *[err.format() for err in errors],
+                     sep='\n',
+                     end='\n\n')
 
     root_cursor = tu.cursor
     data = _ParseData(found_records=found_records)
@@ -523,11 +519,9 @@ def _process_file(filepath, output, options, found_records):
     # issue warnings for anonymus structs:
     for (type, cursor) in data.skipped_records.values():
         if type == _ElaboratedType.STRUCT:
-            sys.stderr.write("WARNING: Skipped unamed struct decl at ")
-            sys.stderr.write(f"{location.file}:{location.line}:{location.column}\n")
+            logging.warn("Skipped unamed struct decl", location=location)
         else:
-            sys.stderr.write("WARNING: Skipped unamed union decl at ")
-            sys.stderr.write(f"{location.file}:{location.line}:{location.column}\n")
+            logging.warn("Skipped unamed union decl", location=location)
 
     return data.found_records
 _process_file._visit_table = {

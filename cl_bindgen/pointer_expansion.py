@@ -1,5 +1,4 @@
 import re
-import sys
 
 def _extract_match_option(rules: dict, list_arg: str):
     match_obj = rules.get(list_arg)
