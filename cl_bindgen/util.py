@@ -64,10 +64,13 @@ def _process_batch_options(option, dictionary):
     pkg_config = dictionary.get('pkg-config')
     ptr_handling = dictionary.get('pointer-expansion')
     inline_handling = dictionary.get('make-inline')
+    return_str = dictionary.get('string-return')
     if ptr_handling:
-        option.expand_pointer_p = process_pointer_expansion_rules(ptr_handling)
+        option.expand_pointer_p = process_pointer_expansion_rules(ptr_handling, list_arg='types')
     if inline_handling:
         option.declaim_inline_p = process_pointer_expansion_rules(inline_handling)
+    if return_str:
+        option.return_str_p = process_pointer_expansion_rules(return_str)
     if output:
         option.output = output
     if args:

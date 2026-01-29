@@ -79,11 +79,13 @@ Optional Fields:
   the flags needed to compile the given header files as told by
   `pkg-config --cflags`
 + `pointer-expansion` (experimental): Used to provide either a regex
-	or a list of pointer types to expand or not expand in the output.
+  or a list of pointer types to expand or not expand in the output.
 + `make-inline` (experimental): Used to provide either a regex
-	or a list of names matching functions that should be declared
-	`inline`. Uses the same yml keys as `ponter-expansion`.
-
+  or a list of names matching functions that should be declared
+  `inline`.
++ `string-return` (experimental): Used to provide either a regex
+  or a list of names matching functions that should return `:string`
+  instead of `(:pointer :char)`
 
 To see example batch files, look in the
 [examples](https://github.com/sdilts/cl-bindgen/tree/master/examples)

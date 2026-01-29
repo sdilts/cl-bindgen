@@ -1,20 +1,28 @@
 import re
+import sys
 
-def process_pointer_expansion_rules(options: dict):
+def _extract_match_option(rules: dict, list_arg: str):
+    match_obj = rules.get(list_arg)
+    if match_obj:
+        if type(match_obj) is list:
+            return match_obj
+        else:
+            return [ match_obj ]
+    return None
+
+def process_pointer_expansion_rules(options: dict, list_arg='names'):
     include_rules = options.get('include')
     if include_rules is not None:
-        match_obj = include_rules.get('match')
-        inc_regex = match_obj if type(match_obj) is list else [ match_obj ]
-        inc_list = include_rules.get('types', [])
+        inc_regex = _extract_match_option(include_rules, 'match')
+        inc_list = include_rules.get(list_arg, [])
     else:
         inc_regex = None
         inc_list = []
 
     exclude_rules = options.get('exclude')
     if exclude_rules is not None:
-        match_obj = exclude_rules.get('match')
-        ex_regex = match_obj if type(match_obj) is list else [ match_obj ]
-        ex_list = exclude_rules.get('types', [])
+        ex_regex = _extract_match_option(exclude_rules, 'match')
+        ex_list = exclude_rules.get(list_arg, [])
     else:
         ex_list = []
         ex_regex = None

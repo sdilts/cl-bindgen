@@ -67,9 +67,14 @@ class ProcessOptions:
     name_manglers: list = dataclasses.field(default_factory=lambda: [])
     constant_manglers: list = dataclasses.field(default_factory=lambda: [])
 
-    macro_detector: typing.Callable[[str,str,], bool] = dataclasses.field(default_factory=lambda: lambda s, n: False)
-    expand_pointer_p: typing.Callable[[str], bool] = dataclasses.field(default_factory=lambda: lambda s: True)
-    declaim_inline_p: typing.Callable[[str], bool] = dataclasses.field(default_factory=lambda: lambda s: False)
+    macro_detector: typing.Callable[[str,str,], bool] = dataclasses.field(
+        default_factory=lambda: lambda s, n: False)
+    expand_pointer_p: typing.Callable[[str], bool] = dataclasses.field(
+        default_factory=lambda: lambda s: True)
+    declaim_inline_p: typing.Callable[[str], bool] = dataclasses.field(
+        default_factory=lambda: lambda s: False)
+    return_str_p: typing.Callable[[str], bool] = dataclasses.field(
+        default_factory=lambda: lambda s: False)
 
     output: str = dataclasses.field(default_factory=lambda: ":stdout")
     package : str = None
@@ -356,13 +361,24 @@ def _process_enum_decl(cursor, data, output, options):
     else:
         data.skipped_enums[cursor.hash] = cursor
 
+def _use_string_ret_type(name, ret_type, options):
+    kind = ret_type.kind
+    if kind == TypeKind.POINTER:
+        pointee_type = ret_type.get_pointee()
+        if pointee_type.kind == TypeKind.CHAR_S or pointee_type.kind == TypeKind.CHAR_U:
+            return options.return_str_p(name)
+    return False
+
 def _process_func_decl(cursor, data, output, options):
     name = cursor.spelling
     # mangle function names the same way as typenames:
     mangled_name = _mangle_string(name, options.type_manglers)
 
     ret_type = cursor.result_type
-    lisp_ret_type = _cursor_lisp_type_str(ret_type, options, cursor.location)
+    if _use_string_ret_type(name, ret_type, options):
+        lisp_ret_type = ':string'
+    else:
+        lisp_ret_type = _cursor_lisp_type_str(ret_type, options, cursor.location)
 
     if options.declaim_inline_p(name):
         output.write(f'(declaim (inline {mangled_name}))\n')
