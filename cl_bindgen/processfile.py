@@ -173,7 +173,7 @@ def _cursor_lisp_type_str(type_obj, options, location=None):
                 type_str = "(:pointer " + pointee_type_str + ")"
                 return type_str
             else:
-                return f':pointer #| {pointee_type_str} |# '
+                return f':pointer #| {pointee_type_str} |#'
     elif kind == TypeKind.ELABORATED:
         # Either a struct, union, or enum: (any type that looks like "struct foo", "enum foo", etc
         named_type = type_obj.get_named_type()
@@ -204,7 +204,7 @@ def _cursor_lisp_type_str(type_obj, options, location=None):
     elif kind == TypeKind.FUNCTIONNOPROTO:
         raise ProcessingError("Don't know how to handle type kind FUNCTIONNOPROTO", location)
     elif kind == TypeKind.ENUM:
-        return f":int #| {_mangle_string(type_obj.spelling, options.type_manglers)} |# "
+        return f":int #| {_mangle_string(type_obj.spelling, options.type_manglers)} |#"
 
     raise ProcessingError(f"Don't know how to handle type: {type_obj.spelling} {kind}", location)
 
