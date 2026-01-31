@@ -1,7 +1,6 @@
 import unittest
 
-from cl_bindgen.pointer_expansion import process_pointer_expansion_rules
-
+from cl_bindgen.inclusion_rules import process_inclusion_rules
 class PointerExpansionTest(unittest.TestCase):
 
     def test_include_and_empty_match_field(self):
@@ -9,9 +8,9 @@ class PointerExpansionTest(unittest.TestCase):
             rules = {
                 'include': {}
             }
-            process_pointer_expansion_rules(rules, 'names')
+            process_inclusion_rules(rules, 'names')
         except Exception as e:
-            self.fail('process_pointer_expansion_rules failed with exception',
+            self.fail('process_inclusion_rules failed with exception',
                       e)
 
     def test_exclude_and_empty_match_field(self):
@@ -19,9 +18,9 @@ class PointerExpansionTest(unittest.TestCase):
             rules = {
 		'include': {}
 	    }
-            process_pointer_expansion_rules(rules, 'names')
+            process_inclusion_rules(rules, 'names')
         except Exception as e:
-            self.fail('process_pointer_expansion_rules failed with exception',
+            self.fail('process_inclusion_rules failed with exception',
                       e)
 
     def test_whitelist_list_works(self):
@@ -31,7 +30,7 @@ class PointerExpansionTest(unittest.TestCase):
                 'names': allowed
             }
         }
-        result = process_pointer_expansion_rules(rules, 'names')
+        result = process_inclusion_rules(rules, 'names')
         self.assertTrue(all([ result(i) for i in allowed]))
         self.assertFalse(result('fooBar'))
 
@@ -42,7 +41,7 @@ class PointerExpansionTest(unittest.TestCase):
 	        'names': banned
             }
         }
-        result = process_pointer_expansion_rules(rules, 'names')
+        result = process_inclusion_rules(rules, 'names')
         self.assertTrue(all([ not result(i) for i in banned]))
         self.assertTrue(result('fooBar'))
 
@@ -57,7 +56,7 @@ class PointerExpansionTest(unittest.TestCase):
                 'names': allowed
             }
         }
-        result = process_pointer_expansion_rules(rules, 'names')
+        result = process_inclusion_rules(rules, 'names')
         self.assertTrue(all([ not result(i) for i in banned]))
         actual_allowed = ['cheese', 'curds']
         self.assertTrue(all([ result(i) for i in actual_allowed]))

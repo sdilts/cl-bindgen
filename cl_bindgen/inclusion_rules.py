@@ -9,7 +9,7 @@ def _extract_match_option(rules: dict, list_arg: str):
             return [ match_obj ]
     return None
 
-def process_pointer_expansion_rules(options: dict, list_arg='names'):
+def process_inclusion_rules(options: dict, list_arg='names'):
     include_rules = options.get('include')
     if include_rules is not None:
         inc_regex = _extract_match_option(include_rules, 'match')

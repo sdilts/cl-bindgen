@@ -11,7 +11,7 @@ import clang.cindex as clang
 
 import cl_bindgen.processfile as processfile
 import cl_bindgen.logging as logging
-from cl_bindgen.pointer_expansion import process_pointer_expansion_rules
+from cl_bindgen.inclusion_rules import process_inclusion_rules
 import cl_bindgen.macro_util as macro_util
 import cl_bindgen.mangler as mangler
 
@@ -66,11 +66,11 @@ def _process_batch_options(option, dictionary):
     inline_handling = dictionary.get('make-inline')
     return_str = dictionary.get('string-return')
     if ptr_handling:
-        option.expand_pointer_p = process_pointer_expansion_rules(ptr_handling, list_arg='types')
+        option.expand_pointer_p = process_inclusion_rules(ptr_handling, list_arg='types')
     if inline_handling:
-        option.declaim_inline_p = process_pointer_expansion_rules(inline_handling)
+        option.declaim_inline_p = process_inclusion_rules(inline_handling)
     if return_str:
-        option.return_str_p = process_pointer_expansion_rules(return_str)
+        option.return_str_p = process_inclusion_rules(return_str)
     if output:
         option.output = output
     if args:
