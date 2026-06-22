@@ -8,7 +8,7 @@
   (flag :short)
   (anon-0 (:union nested-union-anon-0)))
 
-(cffi:defcunion nested-struct-anon-0
+(cffi:defcstruct nested-struct-anon-0
   (a :short)
   (b :short))
 

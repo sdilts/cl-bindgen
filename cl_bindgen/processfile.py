@@ -145,7 +145,7 @@ def _determine_decl_field(field, inner_name, output, options, found_records):
         _process_record(inner_name, _ElaboratedType.UNION, field, output, options, found_records)
         return "(:union " + inner_name + ")"
     elif cursor_kind == CursorKind.STRUCT_DECL:
-        _process_record(inner_name, _ElaboratedType.UNION, field, output, options, found_records)
+        _process_record(inner_name, _ElaboratedType.STRUCT, field, output, options, found_records)
         return "(:struct " + inner_name + ")"
     else:
         raise Exception(f"Unknown cursor kind {cursor_kind} when realizing field type")
@@ -165,6 +165,16 @@ def _cursor_typedef_str(type_obj, options):
         return _mangle_string(type_decl_str, options.typedef_manglers)
 
 def _cursor_lisp_type_str(type_obj, options, location=None):
+    def process_record_type():
+        type_decl = type_obj.get_declaration()
+        mangled_name = _mangle_string(type_decl.spelling, options.type_manglers)
+        if type_decl.kind == CursorKind.UNION_DECL:
+            return "(:union " + mangled_name + ")"
+        elif type_decl.kind == CursorKind.STRUCT_DECL:
+            return "(:struct " + mangled_name + ")"
+        else:
+            raise ProcessingError("Unknown cursorkind", location)
+
     assert(isinstance(type_obj, clang.Type))
     kind = type_obj.kind
     known_type = _cursor_lisp_type_str._builtin_table.get(kind)
@@ -189,18 +199,13 @@ def _cursor_lisp_type_str(type_obj, options, location=None):
         named_type = type_obj.get_named_type()
         named_type_kind = named_type.kind
         if named_type_kind == TypeKind.RECORD:
-            type_decl = type_obj.get_declaration()
-            mangled_name = _mangle_string(type_decl.spelling, options.type_manglers)
-            if type_decl.kind == CursorKind.UNION_DECL:
-                return "(:union " + mangled_name + ")"
-            elif type_decl.kind == CursorKind.STRUCT_DECL:
-                return "(:struct " + mangled_name + ")"
-            else:
-                raise ProcessingError("Unknown cursorkind", location)
+            return process_record_type()
         elif named_type_kind == TypeKind.ENUM:
             return f":int #| {_mangle_string(named_type.spelling, options.type_manglers)} |#"
         elif named_type_kind == TypeKind.TYPEDEF:
             return _cursor_typedef_str(type_obj, options)
+    elif kind == TypeKind.RECORD:
+        return process_record_type()
     elif kind == TypeKind.INCOMPLETEARRAY:
         elem_type = type_obj.element_type
         return f"(:pointer {_cursor_lisp_type_str(elem_type, options, location)} #| array |#)"
@@ -214,7 +219,8 @@ def _cursor_lisp_type_str(type_obj, options, location=None):
     elif kind == TypeKind.FUNCTIONNOPROTO:
         raise ProcessingError("Don't know how to handle type kind FUNCTIONNOPROTO", location)
     elif kind == TypeKind.ENUM:
-        return f":int #| {_mangle_string(type_obj.spelling, options.type_manglers)} |#"
+        enum_type = _cursor_lisp_type_str(type_obj.enum_type, options, location)
+        return f"{enum_type} #| {_mangle_string(named_type.spelling, options.type_manglers)} |#"
 
     raise ProcessingError(f"Don't know how to handle type: {type_obj.spelling} {kind}", location)
 
@@ -322,8 +328,10 @@ def _process_record(name, actual_type, cursor, output, options, found_records: s
     text_stream = io.StringIO()
     if actual_type == _ElaboratedType.UNION:
         text_stream.write(f"(cffi:defcunion {name}")
-    else:
+    elif actual_type == _ElaboratedType.STRUCT:
         text_stream.write(f"(cffi:defcstruct {name}")
+    else:
+        raise ProcessingError(f"Don't know how to handled actual type {actual_type}")
 
     _output_comment(cursor, text_stream, before='\n',after='')
     if cursor.is_definition():
