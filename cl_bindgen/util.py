@@ -67,8 +67,14 @@ def _process_batch_options(option, dictionary):
     return_str = dictionary.get('string-return')
     if ptr_handling:
         option.expand_pointer_p = process_inclusion_rules(ptr_handling, list_arg='types')
-    if inline_handling:
-        option.declaim_inline_p = process_inclusion_rules(inline_handling)
+    if inline_handling is not None:
+        rules = []
+        for r in inline_handling:
+            rules.append(processfile.InlineRule(
+                process_inclusion_rules(r),
+                r.get('feature-flag')
+            ))
+        option.declaim_inline_rules.extend(rules)
     if return_str:
         option.return_str_p = process_inclusion_rules(return_str)
     if output:

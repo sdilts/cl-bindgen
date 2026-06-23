@@ -59,6 +59,11 @@ class ParserException(Exception):
         return stream.getvalue()
 
 @dataclass
+class InlineRule:
+    checker: typing.Callable[[str], bool] = dataclasses.field()
+    feature: str = dataclasses.field()
+
+@dataclass
 class ProcessOptions:
     typedef_manglers: list = dataclasses.field(default_factory=lambda: [])
     enum_manglers: list = dataclasses.field(default_factory=lambda: [])
@@ -66,12 +71,12 @@ class ProcessOptions:
     name_manglers: list = dataclasses.field(default_factory=lambda: [])
     constant_manglers: list = dataclasses.field(default_factory=lambda: [])
 
+    declaim_inline_rules: list = dataclasses.field(default_factory=lambda: [])
+
     macro_detector: typing.Callable[[str,str,], bool] = dataclasses.field(
         default_factory=lambda: lambda s, n: False)
     expand_pointer_p: typing.Callable[[str], bool] = dataclasses.field(
         default_factory=lambda: lambda s: True)
-    declaim_inline_p: typing.Callable[[str], bool] = dataclasses.field(
-        default_factory=lambda: lambda s: False)
     return_str_p: typing.Callable[[str], bool] = dataclasses.field(
         default_factory=lambda: lambda s: False)
 
@@ -79,6 +84,18 @@ class ProcessOptions:
     package : str = None
     arguments: list = dataclasses.field(default_factory=lambda: [])
     force: bool = False
+
+    def declaim_inline_p(self, s: str):
+        if self.declaim_inline_rules:
+            for r in self.declaim_inline_rules:
+                expand = r.checker(s)
+                if expand:
+                    if r.feature:
+                        return [True, r.feature]
+                    else:
+                        return [True, None]
+        else:
+            return [False, None]
 
     @staticmethod
     def output_file_from_option(option, open_args):
@@ -408,8 +425,14 @@ def _process_func_decl(cursor, data, output, options):
     else:
         lisp_ret_type = _cursor_lisp_type_str(ret_type, options, cursor.location)
 
-    if options.declaim_inline_p(name):
-        output.write(f'(declaim (inline {mangled_name}))\n')
+    [inline, feature] = options.declaim_inline_p(name)
+    if inline:
+        if feature is not None:
+            output.write(
+                f'#{feature}\n(declaim (inline {mangled_name}))\n'
+            )
+        else:
+            output.write(f'(declaim (inline {mangled_name}))\n')
 
     output.write("(cffi:defcfun ")
     if name != mangled_name:
