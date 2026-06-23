@@ -79,6 +79,8 @@ class ProcessOptions:
         default_factory=lambda: lambda s: True)
     return_str_p: typing.Callable[[str], bool] = dataclasses.field(
         default_factory=lambda: lambda s: False)
+    expand_enum_p: typing.Callable[[str], bool] = dataclasses.field(
+        default_factory=lambda: lambda s: False)
 
     output: str = dataclasses.field(default_factory=lambda: ":stdout")
     package : str = None
@@ -143,7 +145,11 @@ def _determine_elaborated_type(type_obj):
 
 def _emit_enum_type(decl: clang.Cursor, options: ProcessOptions, location: clang.SourceLocation):
     enum_type = _cursor_lisp_type_str(decl.enum_type, options, location)
-    return f"{enum_type} #| {_mangle_string(decl.spelling, options.type_manglers)} |#"
+    mangled_name = _mangle_string(decl.spelling, options.type_manglers)
+    if options.expand_enum_p(decl.spelling):
+        return f"{mangled_name} #| {enum_type} |#"
+    else:
+        return f"{enum_type} #| {mangled_name} |#"
 
 def _determine_elaborated_field(field, inner_name, output, options, found_records):
     actual_elaborated_type = _determine_elaborated_type(field.type)
