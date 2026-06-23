@@ -34,6 +34,7 @@ tests = [
     ('inputs/forward_declaration.h', 'outputs/forward_declaration.lisp', {}),
     ('inputs/capitalization.h', 'outputs/capitalization.lisp', {}),
     ('inputs/multiple_forward_decls.h', 'outputs/multiple_forward_decls.lisp', {}),
+    ('inputs/enums.h', 'outputs/enums.lisp', {}),
 ]
 
 def test_file_generation():

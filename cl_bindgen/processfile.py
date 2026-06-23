@@ -124,12 +124,16 @@ def _determine_elaborated_type(type_obj):
     elif named_type_kind == TypeKind.ENUM:
         return _ElaboratedType.ENUM
 
+def _emit_enum_type(decl: clang.Cursor, options: ProcessOptions, location: clang.SourceLocation):
+    enum_type = _cursor_lisp_type_str(decl.enum_type, options, location)
+    return f"{enum_type} #| {_mangle_string(decl.spelling, options.type_manglers)} |#"
+
 def _determine_elaborated_field(field, inner_name, output, options, found_records):
     actual_elaborated_type = _determine_elaborated_type(field.type)
     if actual_elaborated_type == _ElaboratedType.ENUM:
         decl = field.type.get_declaration()
         _process_enum_as_constants(decl, output, options)
-        return ":int"
+        return _emit_enum_type(decl, options, field.location)
     elif actual_elaborated_type == _ElaboratedType.UNION:
         _process_record(inner_name, actual_elaborated_type, field, output, options, found_records)
         return "(:union " + inner_name + ")"
@@ -219,8 +223,8 @@ def _cursor_lisp_type_str(type_obj, options, location=None):
     elif kind == TypeKind.FUNCTIONNOPROTO:
         raise ProcessingError("Don't know how to handle type kind FUNCTIONNOPROTO", location)
     elif kind == TypeKind.ENUM:
-        enum_type = _cursor_lisp_type_str(type_obj.enum_type, options, location)
-        return f"{enum_type} #| {_mangle_string(named_type.spelling, options.type_manglers)} |#"
+        enum_decl = type_obj.get_declaration()
+        return _emit_enum_type(enum_decl, options, location)
 
     raise ProcessingError(f"Don't know how to handle type: {type_obj.spelling} {kind}", location)
 
@@ -309,6 +313,8 @@ def _extract_record_fields(name, cursor, text_stream, output, options, found_rec
                 field_type = _determine_elaborated_field(field, inner_name, output, options, found_records)
             elif field.type.kind == clang.TypeKind.RECORD:
                 field_type = _determine_decl_field(field, inner_name, output, options, found_records)
+            elif field.type.kind == TypeKind.ENUM:
+                field_type = _determine_elaborated_field(field, inner_name, output, options, found_records)
             else:
                 raise ProcessingError("Uknown typekind: " + str(field.type.kind),
                                       cursor.location)
