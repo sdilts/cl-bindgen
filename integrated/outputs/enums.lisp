@@ -17,7 +17,7 @@
 
 (cffi:defcstruct outer
   (test-enum test-enum)
-  (typed :short #| typed-enum |#)
+  (typed typed-enum #| :short |#)
   (inner-enum outer-inner-enum))
 
 (cffi:defcenum typedef-enum

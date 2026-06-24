@@ -63,7 +63,7 @@ def _process_batch_options(option, dictionary):
     force = dictionary.get('force')
     pkg_config = dictionary.get('pkg-config')
     ptr_handling = dictionary.get('pointer-expansion')
-    enum_handling = dictionary.get('enum-expansion')
+    enum_handling = dictionary.get('enum-constants')
     inline_handling = dictionary.get('make-inline')
     return_str = dictionary.get('string-return')
     if ptr_handling:
@@ -77,7 +77,7 @@ def _process_batch_options(option, dictionary):
             ))
         option.declaim_inline_rules.extend(rules)
     if enum_handling:
-        option.expand_enum_p = process_inclusion_rules(enum_handling)
+        option.enum_constant_p = process_inclusion_rules(enum_handling)
     if return_str:
         option.return_str_p = process_inclusion_rules(return_str)
     if output:
