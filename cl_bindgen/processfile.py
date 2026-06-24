@@ -79,7 +79,7 @@ class ProcessOptions:
         default_factory=lambda: lambda s: True)
     return_str_p: typing.Callable[[str], bool] = dataclasses.field(
         default_factory=lambda: lambda s: False)
-    expand_enum_p: typing.Callable[[str], bool] = dataclasses.field(
+    enum_constant_p: typing.Callable[[str], bool] = dataclasses.field(
         default_factory=lambda: lambda s: False)
 
     output: str = dataclasses.field(default_factory=lambda: ":stdout")
@@ -414,11 +414,16 @@ def _process_realized_enum(name, cursor, output, options, as_constants=False):
         output.write(f"(cffi:defcenum {name}")
 
     _output_comment(cursor, output, before='\n',after='')
+
+    if as_constants or options.enum_constant_p(name):
+        manglers = options.constant_manglers
+    else:
+        manglers = options.enum_manglers
     for field in cursor.get_children():
         if as_constants:
-            name = _mangle_string(field.spelling, options.constant_manglers)
+            name = _mangle_string(field.spelling, manglers)
         else:
-            name = _mangle_string(field.spelling, options.enum_manglers)
+            name = _mangle_string(field.spelling, manglers)
 
         output.write(f"\n  ({name} {field.enum_value})")
     output.write(")\n\n")
@@ -433,6 +438,10 @@ def _process_enum_decl(cursor, data, output, options):
     name = cursor.spelling
     if name:
         if cursor.is_anonymous():
+            # Although we could just emit a constant here,
+            # CFFI might need to do something to the definition
+            # because it's an enum. To be safe, emit that too. It won't
+            # affect the API at all.
             name = f'anon-enum-{_process_enum_decl.anon_count}'
             _process_enum_decl.anon_count = _process_enum_decl.anon_count + 1
             _process_realized_enum(name, cursor, output, options, as_constants=True)

@@ -80,10 +80,9 @@ Optional Fields:
   `pkg-config --cflags`
 + `pointer-expansion` (experimental): Used to provide either a regex
   or a list of pointer types to expand or not expand in the output.
-+ `enum-expansion`: By default, cl-bindgen does not expand enum types
-  into their converted lisp type, and instead converts them to their
-  underlying type. This allows you to specify which enums should get
-  expanded to their lisp type.
++ `enum-constants`: By default, cl-bindgen expands enum value
+  symbols into keywords. Types captured here will be expanded to
+  constants instead.
 + `make-inline` (experimental): Used to provide either a regex
   or a list of names matching functions that should be declared
   `inline`.
