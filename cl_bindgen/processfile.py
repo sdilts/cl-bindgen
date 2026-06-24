@@ -143,13 +143,30 @@ def _determine_elaborated_type(type_obj):
     elif named_type_kind == TypeKind.ENUM:
         return _ElaboratedType.ENUM
 
+def _explicitly_typed_enum_p(decl: clang.Cursor):
+    for token in decl.get_tokens():
+        if token.spelling == '{':
+            break
+        elif token.spelling == ':':
+            return True
+    return False
+
 def _emit_enum_type(decl: clang.Cursor, options: ProcessOptions, location: clang.SourceLocation):
-    enum_type = _cursor_lisp_type_str(decl.enum_type, options, location)
     mangled_name = _mangle_string(decl.spelling, options.type_manglers)
-    if options.expand_enum_p(decl.spelling):
-        return f"{mangled_name} #| {enum_type} |#"
+    # Because the default underlying enum type is dependent on the
+    # system and the enum's value, we can't use the underlying type
+    # and must use the enum as declared unless the underlying type
+    # was explicity set:
+    if _explicitly_typed_enum_p(decl):
+        enum_type = _cursor_lisp_type_str(decl.enum_type, options, location)
+        if options.expand_enum_p(decl.spelling):
+            return f"{mangled_name} #| {enum_type} |#"
+        else:
+            return f"{enum_type} #| {mangled_name} |#"
     else:
-        return f"{enum_type} #| {mangled_name} |#"
+        return f"{mangled_name}"
+
+
 
 def _determine_elaborated_field(field, inner_name, output, options, found_records):
     actual_elaborated_type = _determine_elaborated_type(field.type)
@@ -389,7 +406,12 @@ def _process_union_decl(cursor, data: _ParseData, output, options):
         data.skipped_records[cursor.hash] = (_ElaboratedType.UNION, cursor)
 
 def _process_realized_enum(name, cursor, output, options):
-    output.write(f"(cffi:defcenum {name}")
+    if _explicitly_typed_enum_p(cursor):
+        type_name = _cursor_lisp_type_str(cursor.enum_type, options, cursor.location)
+        output.write(f"(cffi:defcenum ({name} {type_name})")
+    else:
+        output.write(f"(cffi:defcenum {name}")
+
     _output_comment(cursor, output, before='\n',after='')
     for field in cursor.get_children():
         name = _mangle_string(field.spelling, options.enum_manglers)
