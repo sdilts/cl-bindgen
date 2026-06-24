@@ -151,18 +151,18 @@ def _explicitly_typed_enum_p(decl: clang.Cursor):
             return True
     return False
 
-def _emit_enum_type(decl: clang.Cursor, options: ProcessOptions, location: clang.SourceLocation):
-    mangled_name = _mangle_string(decl.spelling, options.type_manglers)
+def _emit_enum_type(decl: clang.Cursor, options: ProcessOptions, location: clang.SourceLocation, name=None):
+    if name is not None:
+        mangled_name = name
+    else:
+        mangled_name = _mangle_string(decl.spelling, options.type_manglers)
     # Because the default underlying enum type is dependent on the
     # system and the enum's value, we can't use the underlying type
     # and must use the enum as declared unless the underlying type
     # was explicity set:
     if _explicitly_typed_enum_p(decl):
         enum_type = _cursor_lisp_type_str(decl.enum_type, options, location)
-        if options.expand_enum_p(decl.spelling):
-            return f"{mangled_name} #| {enum_type} |#"
-        else:
-            return f"{enum_type} #| {mangled_name} |#"
+        return f"{mangled_name} #| {enum_type} |#"
     else:
         return f"{mangled_name}"
 
@@ -172,8 +172,8 @@ def _determine_elaborated_field(field, inner_name, output, options, found_record
     actual_elaborated_type = _determine_elaborated_type(field.type)
     if actual_elaborated_type == _ElaboratedType.ENUM:
         decl = field.type.get_declaration()
-        _process_enum_as_constants(decl, output, options)
-        return _emit_enum_type(decl, options, field.location)
+        _process_realized_enum(inner_name, decl, output, options, as_constants=True)
+        return _emit_enum_type(decl, options, field.location, name=inner_name)
     elif actual_elaborated_type == _ElaboratedType.UNION:
         _process_record(inner_name, actual_elaborated_type, field, output, options, found_records)
         return "(:union " + inner_name + ")"
@@ -245,7 +245,8 @@ def _cursor_lisp_type_str(type_obj, options, location=None):
         if named_type_kind == TypeKind.RECORD:
             return process_record_type()
         elif named_type_kind == TypeKind.ENUM:
-            return f":int #| {_mangle_string(named_type.spelling, options.type_manglers)} |#"
+            enum_decl = type_obj.get_declaration()
+            return _emit_enum_type(enum_decl, options, location)
         elif named_type_kind == TypeKind.TYPEDEF:
             return _cursor_typedef_str(type_obj, options)
     elif kind == TypeKind.RECORD:
@@ -405,7 +406,7 @@ def _process_union_decl(cursor, data: _ParseData, output, options):
     else:
         data.skipped_records[cursor.hash] = (_ElaboratedType.UNION, cursor)
 
-def _process_realized_enum(name, cursor, output, options):
+def _process_realized_enum(name, cursor, output, options, as_constants=False):
     if _explicitly_typed_enum_p(cursor):
         type_name = _cursor_lisp_type_str(cursor.enum_type, options, cursor.location)
         output.write(f"(cffi:defcenum ({name} {type_name})")
@@ -414,7 +415,10 @@ def _process_realized_enum(name, cursor, output, options):
 
     _output_comment(cursor, output, before='\n',after='')
     for field in cursor.get_children():
-        name = _mangle_string(field.spelling, options.enum_manglers)
+        if as_constants:
+            name = _mangle_string(field.spelling, options.constant_manglers)
+        else:
+            name = _mangle_string(field.spelling, options.enum_manglers)
 
         output.write(f"\n  ({name} {field.enum_value})")
     output.write(")\n\n")
@@ -428,10 +432,16 @@ def _process_enum_as_constants(cursor, output, options):
 def _process_enum_decl(cursor, data, output, options):
     name = cursor.spelling
     if name:
-        name = _mangle_string(name, options.type_manglers)
-        _process_realized_enum(name, cursor, output, options)
+        if cursor.is_anonymous():
+            name = f'anon-enum-{_process_enum_decl.anon_count}'
+            _process_enum_decl.anon_count = _process_enum_decl.anon_count + 1
+            _process_realized_enum(name, cursor, output, options, as_constants=True)
+        else:
+            name = _mangle_string(name, options.type_manglers)
+            _process_realized_enum(name, cursor, output, options, as_constants=False)
     else:
         data.skipped_enums[cursor.hash] = cursor
+_process_enum_decl.anon_count = 0
 
 def _use_string_ret_type(name, ret_type, options):
     kind = ret_type.kind
