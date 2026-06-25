@@ -208,7 +208,7 @@ def _cursor_typedef_str(type_obj, options):
     else:
         return _mangle_string(type_decl_str, options.typedef_manglers)
 
-def _cursor_lisp_type_str(type_obj, options, location=None):
+def _cursor_lisp_type_str(type_obj, options, location=None, field=False):
     def process_record_type():
         type_decl = type_obj.get_declaration()
         mangled_name = _mangle_string(type_decl.spelling, options.type_manglers)
@@ -258,7 +258,10 @@ def _cursor_lisp_type_str(type_obj, options, location=None):
         elem_type = type_obj.element_type
         num_elems = type_obj.element_count
         type_str = _cursor_lisp_type_str(elem_type, options, location)
-        return f"{type_str} :count {num_elems}"
+        if field:
+            return f"{type_str} :count {num_elems}"
+        else:
+            return f":pointer #| {type_str} :count {num_elems} |#"
     elif kind == TypeKind.FUNCTIONPROTO:
         return f":void #| {type_obj.spelling} |#"
     elif kind == TypeKind.FUNCTIONNOPROTO:
@@ -360,7 +363,7 @@ def _extract_record_fields(name, cursor, text_stream, output, options, found_rec
                 raise ProcessingError("Uknown typekind: " + str(field.type.kind),
                                       cursor.location)
         else:
-            field_type = _cursor_lisp_type_str(field.type, options, cursor.location)
+            field_type = _cursor_lisp_type_str(field.type, options, cursor.location, field=True)
         text_stream.write(f"\n  ({field_name} {field_type})")
 
 def _process_record(name, actual_type, cursor, output, options, found_records: set):
