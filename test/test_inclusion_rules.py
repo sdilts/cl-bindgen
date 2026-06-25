@@ -61,3 +61,18 @@ class PointerExpansionTest(unittest.TestCase):
         actual_allowed = ['cheese', 'curds']
         self.assertTrue(all([ result(i) for i in actual_allowed]))
         self.assertFalse(result('fish'))
+
+    def test_exclude_list_overrides_include_match(self):
+        banned = ['asdf', 'fdsa']
+        rules = {
+            'exclude': {
+                'names': banned
+            },
+            'include': {
+                'match': '.*'
+            }
+        }
+        result = process_inclusion_rules(rules, 'names')
+        self.assertTrue(all([ not result(i) for i in banned]))
+        actual_allowed = ['cheese', 'curds']
+        self.assertTrue(all([ result(i) for i in actual_allowed]))

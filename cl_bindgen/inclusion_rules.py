@@ -66,15 +66,26 @@ def make_batch_determiner(whitelist=None, blacklist=None, include_matcher=None, 
             includer = _compile_regexes(include_matcher)
             def fn(typename):
                 in_white = (typename in allowed_set or _match_regex_list(includer, typename))
-                not_black = (not _match_regex_list(excluder, typename))
+                not_black = not (_match_regex_list(excluder, typename) or
+                             typename in blacklist)
                 return in_white and not_black
             return fn
         elif exclude_matcher is not None:
             excluder = _compile_regexes(exclude_matcher)
-            return lambda x: x in allowed_set and not _match_regex_list(excluder, x)
+            def fn(typename):
+                in_white = typename in allowed_set
+                not_black = not (_match_regex_list(excluder, typename) or
+                             typename in blacklist)
+                return in_white and not_black
+            return fn
         elif include_matcher:
             includer = _compile_regexes(include_matcher)
-            return lambda x: x in allowed_set or _match_regex_list(includer, x)
+            def fn(typename):
+                in_white = (typename in allowed_set
+                            or _match_regex_list(includer, typename))
+                not_black = typename not in blacklist
+                return in_white and not_black
+            return fn
         else:
             return lambda x: x in allowed_set
     else:
